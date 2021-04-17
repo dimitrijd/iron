@@ -1,0 +1,67 @@
+# LABEL contact="Dimitrij Dugan <dimitrijdugan@gmail.com>"
+
+ARG UBUNTU_VERSION=18.04   
+FROM ubuntu:${UBUNTU_VERSION}
+
+# it's possible to unversion coder and use standard install
+
+ARG NODE_VERSION=14.16.1
+ARG NVM_VERSION=v0.34.0
+ARG USR_NAME=ironcoder
+ARG PASSWORD=pass
+ARG uid=1000
+ARG gid=1000
+
+ENV TERM xterm
+ENV SHELL /usr/bin/zsh
+ENV ZSH_THEME agnoster
+ENV HOME /home/$USR_NAME
+ENV NVM_DIR "$HOME/.nvm"
+
+RUN apt-get update &&  \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    sudo ca-certificates apt-transport-https gnupg git zsh \ 
+    wget curl vim \
+    locales fonts-powerline && \
+  locale-gen en_US.UTF-8 && \
+  adduser --quiet --disabled-password \ 
+    --shell $SHELL --home $HOME \
+    --gecos "User" $USR_NAME && \
+  usermod -aG sudo $USR_NAME && \ 
+  echo $USR_NAME:$PASSWORD | chpasswd
+
+RUN  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+RUN  echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" |  tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+RUN  apt-get update 
+RUN  DEBIAN_FRONTEND=noninteractive apt-get install -y mongodb-org
+
+USER $USR_NAME
+WORKDIR $HOME
+RUN wget -O .zshrc  https://raw.githubusercontent.com/zsh-users/zsh/master/StartupFiles/zshrc 
+
+# nvm & node
+RUN mkdir .nvm && mkdir .git
+RUN curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh" | bash  && \
+  [ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"  && \
+  nvm install $NODE_VERSION
+
+# oh-my-zsh
+RUN wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+RUN sh ./install.sh
+RUN rm ./install.sh
+
+# finishing nvm
+RUN echo 'export NVM_DIR="$HOME/.nvm"' >> .zshrc
+RUN echo '[ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"'  >> .zshrc
+RUN echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> .zshrc
+
+# code server
+RUN curl -fOL https://github.com/cdr/code-server/releases/download/v3.9.3/code-server_3.9.3_amd64.deb
+RUN echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb
+RUN rm code-server_3.9.3_amd64.deb
+
+CMD ["zsh"]
+
+#sed -i 's/origin text/new text/' /etc/sysctl.conf
+# bash -c 'echo hello world' >> /etc/sysctl.conf
+
