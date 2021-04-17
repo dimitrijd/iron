@@ -21,7 +21,8 @@ ENV ZSH_THEME agnoster
 ENV HOME /home/$USR_NAME
 ENV NVM_DIR "$HOME/.nvm"
 
-RUN apt-get update &&  \
+RUN \ 
+  apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     sudo ca-certificates apt-transport-https tzdata gnupg git zsh \ 
     wget curl vim \
@@ -31,17 +32,20 @@ RUN apt-get update &&  \
     --shell $SHELL --home $HOME \
     --gecos "User" $USR_NAME && \
   usermod -aG sudo $USR_NAME && \ 
-  echo $USR_NAME:$PASSWORD | chpasswd
-
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
-RUN echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.0.list
-RUN apt-get update && apt-get install -y mongodb-org && mkdir -p /data/db
+  echo $USR_NAME:$PASSWORD | chpasswd && \
+  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4 && \
+  echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.0.list  && \
+  apt-get update && apt-get install -y mongodb-org && mkdir -p /data/db
 
 # mongod needs to be started as sudo
 
 USER $USR_NAME
 WORKDIR $HOME
-RUN wget -O .zshrc  https://raw.githubusercontent.com/zsh-users/zsh/master/StartupFiles/zshrc 
+# zsh / oh-my-zsh
+RUN \ 
+  wget -O .zshrc  https://raw.githubusercontent.com/zsh-users/zsh/master/StartupFiles/zshrc && \
+  wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh && \
+  sh ./install.sh && rm ./install.sh
 
 # nvm & node
 RUN mkdir .nvm && mkdir .git
@@ -49,10 +53,6 @@ RUN curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.
   [ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"  && \
   nvm install $NODE_VERSION
 
-# oh-my-zsh
-RUN wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-RUN sh ./install.sh
-RUN rm ./install.sh
 
 # finishing nvm
 RUN echo 'export NVM_DIR="$HOME/.nvm"' >> .zshrc
