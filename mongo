@@ -31,3 +31,4 @@ CMD ["mongod"]
 #   - 28017: http
 EXPOSE 27017
 EXPOSE 28017
+#  sudo mongod  --bind_ip_all &

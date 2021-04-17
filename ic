@@ -64,3 +64,4 @@ CMD ["zsh"]
 #sed -i 's/origin text/new text/' /etc/sysctl.conf
 # bash -c 'echo hello world' >> /etc/sysctl.conf
 
+#  sudo mongod  --bind_ip_all &
