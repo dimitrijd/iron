@@ -6,8 +6,15 @@ RUN apt-get update && \
     apt-get clean
 
 RUN mkdir -p /var/log/supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+RUN printf '\
+[supervisord] \n\
+logfile=/var/log/supervisor/supervisord.log \n\
+pidfile=/var/run/supervisord.pid \n\
+nodaemon=true' >> poc3
+
+RUN mv poc3 /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 8089
 
-CMD ["/usr/bin/supervisord"]
+CMD ["/usr/bin/supervisord"] 
