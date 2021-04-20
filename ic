@@ -15,32 +15,55 @@ ARG PASSWORD=pass
 ARG uid=1000
 ARG gid=1000
 
-ENV TERM xterm
 ENV SHELL /usr/bin/zsh
 ENV ZSH_THEME agnoster
 ENV HOME /home/$USR_NAME
 ENV NVM_DIR "$HOME/.nvm"
 
 RUN \ 
-  apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    sudo ca-certificates apt-transport-https tzdata gnupg git zsh \ 
-    wget curl vim \
-    locales fonts-powerline && \
-  locale-gen en_US.UTF-8 && \
-  adduser --quiet --disabled-password \ 
-    --shell $SHELL --home $HOME \
-    --gecos "User" $USR_NAME && \
-  usermod -aG sudo $USR_NAME && \ 
-  echo $USR_NAME:$PASSWORD | chpasswd && \
-  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4 && \
-  echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.0.list  && \
-  apt-get update && apt-get install -y mongodb-org && \
-  apt-get clean && apt-get autoremove && \
-  rm -rf /var/cache/apt/lists && \
-  mkdir -p /data/db
+  apt-get update \
+  && export DEBIAN_FRONTEND=noninteractive \ 
+  && apt-get install -y --no-install-recommends \
+       dumb-init \
+       sudo \ 
+       ca-certificates \ 
+       apt-transport-https \ 
+       tzdata \ 
+       gnupg \ 
+       wget \ 
+       curl \ 
+       vim \
+       git \
+       zsh \ 
+       locales \
+       fonts-powerline \
+  && locale-gen en_US.UTF-8 \
+  && adduser --quiet --disabled-password \ 
+       --shell $SHELL --home $HOME \
+       --gecos "User" $USR_NAME \
+  && usermod -aG sudo $USR_NAME \ 
+  && echo $USR_NAME:$PASSWORD | chpasswd \
+  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4 \
+  && echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | \ 
+       tee /etc/apt/sources.list.d/mongodb-org-4.0.list \
+  && apt-get update && apt-get install -y mongodb-org \
+  && apt-get clean && apt-get autoremove \
+  && rm -rf /var/cache/apt/lists \
+  && mkdir -p /data/db \
+  && groupadd -f mongodb \
+  && usermod -aG mongodb $USR_NAME \
+  && chown -R mongodb:mongodb /data \
+  && chmod -R g+w /data 
+  
+ADD  https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.1/s6-overlay-amd64-installer /tmp/ 
+RUN  chmod +x /tmp/s6-overlay-amd64-installer 
+RUN  /tmp/s6-overlay-amd64-installer / 
 
 # mongod needs to be started as sudo
+
+ADD https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz /tmp/
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
+
 
 USER $USR_NAME
 WORKDIR $HOME
@@ -59,9 +82,22 @@ RUN \
   echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb && \
   rm code-server_3.9.3_amd64.deb
 
-CMD ["zsh"]
+EXPOSE 27017
+EXPOSE 28017
+
+# ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+USER root
+
+RUN echo "exec -l su ironcoder" > init.sh && chmod +x init.sh
+
+ENTRYPOINT ["/init"]
+CMD ["zsh", "./init.sh"] 
+#CMD ["/usr/bin/bash -c 'exec -l su ironcoder'"]
+
 
 #sed -i 's/origin text/new text/' /etc/sysctl.conf
 # bash -c 'echo hello world' >> /etc/sysctl.conf
 
-#  sudo mongod  --bind_ip_all &
+#!/usr/bin/dumb-init /bin/sh
+# sudo mongod  --bind_ip_all &
