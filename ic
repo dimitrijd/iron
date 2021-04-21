@@ -1,12 +1,5 @@
-# TODO https://github.com/just-containers/s6-overlay
-
-
-# LABEL contact="Dimitrij Dugan <dimitrijdugan@gmail.com>"
-
 ARG UBUNTU_VERSION=18.04   
 FROM ubuntu:${UBUNTU_VERSION}
-
-# it's possible to unversion coder and use standard install
 
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.34.0
@@ -16,15 +9,15 @@ ARG uid=1000
 ARG gid=1000
 
 ENV SHELL /usr/bin/zsh
-ENV ZSH_THEME agnoster
 ENV HOME /home/$USR_NAME
 ENV NVM_DIR "$HOME/.nvm"
+ENV DEBIAN_FRONTEND noninteractive  
 
 RUN \ 
   apt-get update \
-  && export DEBIAN_FRONTEND=noninteractive \ 
-  && apt-get install -y --no-install-recommends \
+  && apt-get install -y \
        dumb-init \
+       supervisor \
        sudo \ 
        ca-certificates \ 
        apt-transport-https \ 
@@ -36,7 +29,8 @@ RUN \
        git \
        zsh \ 
        locales \
-       fonts-powerline \
+       fonts-powerline \ 
+       --no-install-recommends \
   && locale-gen en_US.UTF-8 \
   && adduser --quiet --disabled-password \ 
        --shell $SHELL --home $HOME \
@@ -53,51 +47,47 @@ RUN \
   && groupadd -f mongodb \
   && usermod -aG mongodb $USR_NAME \
   && chown -R mongodb:mongodb /data \
-  && chmod -R g+w /data 
-  
-ADD  https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.1/s6-overlay-amd64-installer /tmp/ 
-RUN  chmod +x /tmp/s6-overlay-amd64-installer 
-RUN  /tmp/s6-overlay-amd64-installer / 
+  && chmod -R g+w /data \
+  && printf '[program:mongod] \
+command=mongod --quiet --logpath /data/log --bind_ip_all' > /etc/supervisor/conf.d/mongod.conf \
+  && printf '/etc/supervisor/conf.d/code.conf > /etc/supervisor/conf.d/mongod \
+command=code-server --disable-telemetry --disable-update-check --open --show-versions' > /etc/supervisor/conf.d/code
 
-# mongod needs to be started as sudo
-
-ADD https://github.com/just-containers/s6-overlay/releases/download/v1.22.1.0/s6-overlay-amd64.tar.gz /tmp/
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
-
-
-USER $USR_NAME
 WORKDIR $HOME
-# zsh / oh-my-zsh
+USER $USR_NAME
 RUN \ 
-  wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh && \
-  sh ./install.sh && rm ./install.sh && \
-  mkdir .nvm && mkdir .git  && touch .gitconfig && \
-  curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh" | bash  && \
-  [ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"  && \
-  nvm install $NODE_VERSION  && \
-  echo 'export NVM_DIR="$HOME/.nvm"' >> .zshrc  && \
-  echo '[ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"'  >> .zshrc  && \
-  echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> .zshrc  && \
-  curl -fOL https://github.com/cdr/code-server/releases/download/v3.9.3/code-server_3.9.3_amd64.deb && \
-  echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb && \
-  rm code-server_3.9.3_amd64.deb
-
-EXPOSE 27017
-EXPOSE 28017
-
-# ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+  wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
+  && sh ./install.sh && rm ./install.sh \
+  && mkdir .nvm && mkdir .git  && touch .gitconfig \
+  && curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh" | bash \
+  && [ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh" \
+  && nvm install $NODE_VERSION \
+  && echo 'export NVM_DIR="$HOME/.nvm"' >> .zshrc \
+  && echo '[ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"'  >> .zshrc \
+  && echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> .zshrc \
+  && curl -fOL https://github.com/cdr/code-server/releases/download/v3.9.3/code-server_3.9.3_amd64.deb \
+  && echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb \
+  && rm code-server_3.9.3_amd64.deb \
+  && echo "exec -l su ironcoder" > .init.sh \ 
+  && chmod +x .init.sh 
 
 USER root
-
-RUN echo "exec -l su ironcoder" > init.sh && chmod +x init.sh
-
-ENTRYPOINT ["/init"]
-CMD ["zsh", "./init.sh"] 
-#CMD ["/usr/bin/bash -c 'exec -l su ironcoder'"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["zsh", "./.init.sh"] 
 
 
 #sed -i 's/origin text/new text/' /etc/sysctl.conf
 # bash -c 'echo hello world' >> /etc/sysctl.conf
-
 #!/usr/bin/dumb-init /bin/sh
 # sudo mongod  --bind_ip_all &
+
+#/etc/supervisor/conf.d/mongod.conf
+#[program:mongod]
+#command=mongod --quiet --logpath /data/log --bind_ip_all
+
+
+#/etc/supervisor/conf.d/code.conf
+#[program:code-server]
+#command=code-server --disable-telemetry --disable-update-check --open --show-versions $1
+
+#https://csjourney.com/managing-processes-with-supervisor-in-depth-tutorial/
