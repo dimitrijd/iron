@@ -48,10 +48,11 @@ RUN \
   && usermod -aG mongodb $USR_NAME \
   && chown -R mongodb:mongodb /data \
   && chmod -R g+w /data \
-  && printf '[program:mongod] \
-command=mongod --quiet --logpath /data/log --bind_ip_all' > /etc/supervisor/conf.d/mongod.conf \
-  && printf '/etc/supervisor/conf.d/code.conf > /etc/supervisor/conf.d/mongod \
-command=code-server --disable-telemetry --disable-update-check --open --show-versions' > /etc/supervisor/conf.d/code
+  && mkdir -p /etc/supervisor/conf.d/ \
+  && chmod -R a+w /etc/supervisor/
+
+COPY ./code.conf /etc/supervisor/conf.d/conf.conf
+COPY ./mongod.conf /etc/supervisor/conf.d/mongod.conf
 
 WORKDIR $HOME
 USER $USR_NAME
@@ -67,27 +68,14 @@ RUN \
   && echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> .zshrc \
   && curl -fOL https://github.com/cdr/code-server/releases/download/v3.9.3/code-server_3.9.3_amd64.deb \
   && echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb \
-  && rm code-server_3.9.3_amd64.deb \
-  && echo "exec -l su ironcoder" > .init.sh \ 
-  && chmod +x .init.sh 
+  && rm code-server_3.9.3_amd64.deb 
 
-USER root
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["zsh", "./.init.sh"] 
-
+CMD ["zsh"] 
 
 #sed -i 's/origin text/new text/' /etc/sysctl.conf
 # bash -c 'echo hello world' >> /etc/sysctl.conf
 #!/usr/bin/dumb-init /bin/sh
 # sudo mongod  --bind_ip_all &
-
-#/etc/supervisor/conf.d/mongod.conf
-#[program:mongod]
-#command=mongod --quiet --logpath /data/log --bind_ip_all
-
-
-#/etc/supervisor/conf.d/code.conf
-#[program:code-server]
-#command=code-server --disable-telemetry --disable-update-check --open --show-versions $1
 
 #https://csjourney.com/managing-processes-with-supervisor-in-depth-tutorial/
