@@ -47,9 +47,11 @@ RUN \
   && groupadd -f mongodb \
   && usermod -aG mongodb $USR_NAME \
   && chown -R mongodb:mongodb /data \
-  && chmod -R g+w /data \
+  && chmod -R g+w /data 
 
 WORKDIR $HOME
+COPY ./supervisord ./.supervisord
+RUN chown -R ironcoder ./.supervisord
 USER $USR_NAME
 RUN \ 
   wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
@@ -65,10 +67,10 @@ RUN \
   && echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb \
   && rm code-server_3.9.3_amd64.deb 
 
-COPY ./supervisor ./.supervisor
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["zsh"] 
+CMD ["zsh"]
+# CMD ["supervisord -c /home/ironcoder/.supervisord/supervisord.conf"] 
 
 #sed -i 's/origin text/new text/' /etc/sysctl.conf
 # bash -c 'echo hello world' >> /etc/sysctl.conf
