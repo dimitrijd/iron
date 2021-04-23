@@ -48,11 +48,6 @@ RUN \
   && usermod -aG mongodb $USR_NAME \
   && chown -R mongodb:mongodb /data \
   && chmod -R g+w /data \
-  && mkdir -p /etc/supervisor/conf.d/ \
-  && chmod -R a+w /etc/supervisor/
-
-COPY ./code.conf /etc/supervisor/conf.d/conf.conf
-COPY ./mongod.conf /etc/supervisor/conf.d/mongod.conf
 
 WORKDIR $HOME
 USER $USR_NAME
@@ -70,6 +65,8 @@ RUN \
   && echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb \
   && rm code-server_3.9.3_amd64.deb 
 
+COPY ./supervisor ./.supervisor
+
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["zsh"] 
 
@@ -79,3 +76,10 @@ CMD ["zsh"]
 # sudo mongod  --bind_ip_all &
 
 #https://csjourney.com/managing-processes-with-supervisor-in-depth-tutorial/
+
+
+# Expose ports.
+#   - 27017: process
+#   - 28017: http
+EXPOSE 27017
+EXPOSE 28017
