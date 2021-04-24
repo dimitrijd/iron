@@ -3,10 +3,12 @@ FROM ubuntu:${UBUNTU_VERSION}
 
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.34.0
-ARG USR_NAME=ironcoder
+ARG USR_NAME=coder
 ARG PASSWORD=pass
 ARG uid=1000
 ARG gid=1000
+ARG ZSH_THEME="takashiyoshida"
+ARG OHMYZSH_PLUGINS="git node" # must be space separated, with no ( )
 
 ENV SHELL /usr/bin/zsh
 ENV HOME /home/$USR_NAME
@@ -61,6 +63,8 @@ RUN \
   && curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh" | bash \
   && [ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh" \
   && nvm install $NODE_VERSION \
+  && sed -i  "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
+  && sed -i  "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
   && echo 'export NVM_DIR="$HOME/.nvm"' >> .zshrc \
   && echo '[ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"'  >> .zshrc \
   && echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> .zshrc \
@@ -71,7 +75,7 @@ RUN \
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["zsh"]
-# CMD ["supervisord -c /home/ironcoder/.supervisord/supervisord.conf"] 
+# CMD ["supervisord -c /home/$USR_NAME/.supervisord/supervisord.conf"] 
 
 #sed -i 's/origin text/new text/' /etc/sysctl.conf
 # bash -c 'echo hello world' >> /etc/sysctl.conf
