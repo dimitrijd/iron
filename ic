@@ -49,13 +49,11 @@ RUN \
   && chown -R mongodb:mongodb /data \
   && chmod -R g+w /data 
 
-COPY ./supervisord/. /etc/supervisor
-
 WORKDIR $HOME
-#COPY ./supervisord ./.supervisord
-#RUN chown -R ironcoder ./.supervisord
-USER $USR_NAME
 COPY ./supervisord ./.supervisord
+RUN chown $USR_NAME ./.supervisord
+
+USER $USR_NAME
 RUN \ 
   wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
   && sh ./install.sh && rm ./install.sh \
