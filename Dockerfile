@@ -32,6 +32,7 @@ RUN \
        zsh \ 
        locales \
        fonts-powerline \ 
+       neofetch \ 
        --no-install-recommends \
   && locale-gen en_US.UTF-8 \
   && adduser --quiet --disabled-password \ 
@@ -77,7 +78,8 @@ RUN \
   && echo "supervisord -c .supervisord/supervisord.conf" >> .zshrc \
   && echo "alias start='supervisorctl -c ~/.supervisord/supervisord.conf start'" >> .zshrc \
   && echo "alias stop='supervisorctl -c ~/.supervisord/supervisord.conf stop'" >> .zshrc \
-  && npm install -g chalk
+  && echo "neofetch" >> .zshrc \
+  && npm install -g chalk 
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["zsh"]
