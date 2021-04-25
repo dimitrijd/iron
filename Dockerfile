@@ -1,16 +1,20 @@
 ARG UBUNTU_VERSION=18.04   
 FROM ubuntu:${UBUNTU_VERSION}
 
+ARG BASE_PACKAGES='dumb-init supervisor sudo ca-certificates apt-transport-https tzdata gnupg'
+ARG SHELL_PACKAGES='curl wget vim git zsh locales fonts-powerline neofetch'
+
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG CODE_VERSION=3.9.3
+ARG SHELL_AT_START=zsh
+ARG ZSH_THEME="takashiyoshida"
+ARG OHMYZSH_PLUGINS="git node"
+
 ARG USR_NAME=coder
 ARG PASSWORD=pass
 ARG uid=1000
 ARG gid=1000
-ARG SHELL_AT_START=zsh
-ARG ZSH_THEME="takashiyoshida"
-ARG OHMYZSH_PLUGINS="git node" # must be space separated, with no ( )
 
 ENV SHELL /usr/bin/zsh
 ENV HOME /home/$USR_NAME
@@ -19,22 +23,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN \ 
   apt-get update \
-  && apt-get install -y \
-       dumb-init \
-       supervisor \
-       sudo \ 
-       ca-certificates \ 
-       apt-transport-https \ 
-       tzdata \ 
-       gnupg \ 
-       wget \ 
-       curl \ 
-       vim \
-       git \
-       zsh \ 
-       locales \
-       fonts-powerline \ 
-       neofetch \ 
+  && apt-get install -y ${BASE_PACKAGES} ${SHELL_PACKAGES} \ 
        --no-install-recommends \
   && locale-gen en_US.UTF-8 \
   && adduser --quiet --disabled-password \ 
