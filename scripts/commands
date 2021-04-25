@@ -1,0 +1,19 @@
+
+# ##
+# ferrum post-build init
+# appended to .bashrc and .zshrc
+
+# nvm environment
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# supervisord start-up
+export SUPERVISORD_HOME="$HOME/ferrum/supervisord"
+supervisord -c $SUPERVISORD_HOME/supervisord.conf
+
+# welcome message
+neofetch
+
+# ##
+

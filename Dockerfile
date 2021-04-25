@@ -53,41 +53,30 @@ RUN \
   && chmod -R g+w /data 
 
 WORKDIR $HOME
-COPY ./supervisord ./.supervisord
-RUN chown $USR_NAME ./.supervisord
+COPY . ferrum
+RUN chown $USR_NAME ferrum
 
 USER $USR_NAME
 RUN \ 
   wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
   && sh ./install.sh && rm ./install.sh \
-  && mkdir .nvm && mkdir .git  && touch .gitconfig \
+  && mkdir .nvm && mkdir .git && mkdir .logs && touch .gitconfig \
   && curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh" | bash \
   && [ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh" \
   && nvm install $NODE_VERSION \
   && sed -i  "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
   && sed -i  "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
-  && echo 'export NVM_DIR="$HOME/.nvm"' >> .zshrc \
-  && echo '[ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh"'  >> .zshrc \
-  && echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> .zshrc \
   && curl -fOL https://github.com/cdr/code-server/releases/download/v3.9.3/code-server_3.9.3_amd64.deb \
   && echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb \
   && rm code-server_3.9.3_amd64.deb \
-  && echo "supervisord -c .supervisord/supervisord.conf" >> .bashrc \
-  && echo "alias start='supervisorctl -c ~/.supervisord/supervisord.conf start'" >> .bashrc \
-  && echo "alias stop='supervisorctl -c ~/.supervisord/supervisord.conf stop'" >> .bashrc \
-  && echo "supervisord -c .supervisord/supervisord.conf" >> .zshrc \
-  && echo "alias start='supervisorctl -c ~/.supervisord/supervisord.conf start'" >> .zshrc \
-  && echo "alias stop='supervisorctl -c ~/.supervisord/supervisord.conf stop'" >> .zshrc \
-  && echo "neofetch" >> .zshrc \
-  && npm install -g chalk 
+  && cat ./ferrum/scripts/commands ./ferrum/scripts/aliases >> .zshrc \
+  && cat ./ferrum/scripts/commands ./ferrum/scripts/aliases >> .bashrc 
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["zsh"]
 
-# sudo mongod  --bind_ip_all &
 
-# Expose ports.
-#   - 27017: process
-#   - 28017: http
-EXPOSE 27017
-EXPOSE 28017
+# mongo
+#EXPOSE 27017   #   - 27017: process
+
+
