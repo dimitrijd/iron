@@ -2,11 +2,13 @@ ARG UBUNTU_VERSION=18.04
 FROM ubuntu:${UBUNTU_VERSION}
 
 ARG NODE_VERSION=14.16.1
-ARG NVM_VERSION=v0.34.0
+ARG NVM_VERSION=v0.38.0
+ARG CODE_VERSION=3.9.3
 ARG USR_NAME=coder
 ARG PASSWORD=pass
 ARG uid=1000
 ARG gid=1000
+ARG SHELL_AT_START=zsh
 ARG ZSH_THEME="takashiyoshida"
 ARG OHMYZSH_PLUGINS="git node" # must be space separated, with no ( )
 
@@ -54,29 +56,43 @@ RUN \
 
 WORKDIR $HOME
 COPY . ferrum
-RUN chown $USR_NAME ferrum
-
+RUN chown ${USR_NAME} ferrum   
 USER $USR_NAME
+
 RUN \ 
-  wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
+# \
+# make diretories and touch files needed for the installations \
+# \
+  mkdir .nvm && mkdir .git && mkdir .logs && touch .gitconfig \
+# \
+# install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
+# \
+  && curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash \
+  && [ -s "${NVM_DIR}/nvm.sh" ] &&  \. "${NVM_DIR}/nvm.sh" \
+  && nvm install ${NODE_VERSION} \
+# \
+# install code-server, pinned version $CODE_VERSION \
+# \
+  && curl -fL https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/code-server_${CODE_VERSION}_amd64.deb -o code.deb \
+  && echo ${PASSWORD} | sudo -S dpkg -i code.deb && rm code.deb \
+# \
+# install oh-my-zsh, unpinned lastest version at container build date \
+# set default theme $ZSH_THEME and plugins $OHMYZSH_PLUGINS \
+# \
+  && wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
   && sh ./install.sh && rm ./install.sh \
-  && mkdir .nvm && mkdir .git && mkdir .logs && touch .gitconfig \
-  && curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh" | bash \
-  && [ -s "$NVM_DIR/nvm.sh" ] &&  \. "$NVM_DIR/nvm.sh" \
-  && nvm install $NODE_VERSION \
   && sed -i  "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
   && sed -i  "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
-  && curl -fOL https://github.com/cdr/code-server/releases/download/v3.9.3/code-server_3.9.3_amd64.deb \
-  && echo $PASSWORD | sudo -S dpkg -i code-server_3.9.3_amd64.deb \
-  && rm code-server_3.9.3_amd64.deb \
-  && cat ./ferrum/scripts/commands ./ferrum/scripts/aliases >> .zshrc \
-  && cat ./ferrum/scripts/commands ./ferrum/scripts/aliases >> .bashrc 
+# \
+# add start up commands and aliases to .zshrc and .bashrc \ 
+# \
+  && cat ./ferrum/scripts/commands ./ferrum/scripts/aliases | tee -a .zshrc  >> .bashrc 
+# 
+# end of RUN
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["zsh"]
-
+CMD ${SHELL}
 
 # mongo
 #EXPOSE 27017   #   - 27017: process
 
-# && mkdir -p ~/.config/code-server && ln -s ~/ferrum/code-server/config.yaml ~/.config/code-server/config.yaml \ 
