@@ -3,45 +3,54 @@ FROM ubuntu:${UBUNTU_VERSION}
 
 ARG BASE_PACKAGES='dumb-init supervisor sudo ca-certificates apt-transport-https tzdata gnupg'
 ARG SHELL_PACKAGES='curl wget vim git zsh locales fonts-powerline neofetch'
-
+ARG MONGO_UBUNTU_VERSION=bionic
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG CODE_VERSION=3.9.3
-ARG SHELL_AT_START=zsh
 ARG ZSH_THEME="takashiyoshida"
 ARG OHMYZSH_PLUGINS="git node"
-
 ARG USR_NAME=coder
 ARG PASSWORD=pass
-ARG uid=1000
-ARG gid=1000
+ARG UID=1000
+ARG GID=1000
 
 ENV SHELL /usr/bin/zsh
 ENV HOME /home/$USR_NAME
 ENV NVM_DIR "$HOME/.nvm"
-ENV DEBIAN_FRONTEND noninteractive  
 
+ENV DEBIAN_FRONTEND noninteractive  
 RUN \ 
+# \
+# install base and shell packages BASE_PACKAGES SHELL_PACKAGES, unpinnned versions \
+# \
   apt-get update \
   && apt-get install -y ${BASE_PACKAGES} ${SHELL_PACKAGES} \ 
-       --no-install-recommends \
+     --no-install-recommends \
   && locale-gen en_US.UTF-8 \
+  && apt-get clean && apt-get autoremove \
+  && rm -rf /var/cache/apt/lists \
+# \
+# install user $USR_NAME $UID, $GID, make they sudoer with $PASSWORD \
+# \
   && adduser --quiet --disabled-password \ 
-       --shell $SHELL --home $HOME \
-       --gecos "User" $USR_NAME \
+     --shell $SHELL --home $HOME \
+     --gecos "User" $USR_NAME \
   && usermod -aG sudo $USR_NAME \ 
   && echo $USR_NAME:$PASSWORD | chpasswd \
+# \
+# install mongodb-org packages, unpinned versions for $UBUNTU_VERSION 
+# create a mongod:mongod user, add $USR_NAME to mongod group  
+# \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4 \
   && echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | \ 
        tee /etc/apt/sources.list.d/mongodb-org-4.0.list \
-  && apt-get update && apt-get install -y mongodb-org \
+  && apt-get update && apt-get install -y mongodb-org --no-install-recommends \
   && apt-get clean && apt-get autoremove \
   && rm -rf /var/cache/apt/lists \
-  && mkdir -p /data/db \
-  && groupadd -f mongodb \
-  && usermod -aG mongodb $USR_NAME \
-  && chown -R mongodb:mongodb /data \
-  && chmod -R g+w /data 
+  && groupadd -f mongodb && usermod -aG mongodb $USR_NAME \
+  && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
+# 
+# end of RUN
 
 WORKDIR $HOME
 COPY . ferrum
