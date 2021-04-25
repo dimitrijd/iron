@@ -79,4 +79,4 @@ CMD ["zsh"]
 # mongo
 #EXPOSE 27017   #   - 27017: process
 
-
+# && mkdir -p ~/.config/code-server && ln -s ~/ferrum/code-server/config.yaml ~/.config/code-server/config.yaml \ 
