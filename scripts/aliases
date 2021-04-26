@@ -11,7 +11,9 @@ alias stop='supervisorctl -c $SUPERVISORD_HOME/supervisord.conf stop'
 alias status='supervisorctl -c $SUPERVISORD_HOME/supervisord.conf status'
 
 # services start 
-alias code='echo "open http://0.0.0.0:8443" && start code'
+code () {
+  echo "open http://0.0.0.0:8443" && start code
+}
 alias mongod='start mongod'
 alias express='start express'
 

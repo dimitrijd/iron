@@ -7,6 +7,8 @@ ARG MONGO_UBUNTU_VERSION=bionic
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG CODE_VERSION=3.9.3
+ARG CODE_EXTENSIONS=pinned
+# ARG CODE_EXTENSIONS=latest
 ARG ZSH_THEME="takashiyoshida"
 ARG OHMYZSH_PLUGINS="git node"
 ARG USR_NAME=coder
@@ -69,10 +71,12 @@ RUN \
   && [ -s "${NVM_DIR}/nvm.sh" ] &&  \. "${NVM_DIR}/nvm.sh" \
   && nvm install ${NODE_VERSION} \
 # \
-# install code-server, pinned version $CODE_VERSION \
+# install code-server, pinned version $CODE_VERSION, pinned extensions ferrum/code-server/extensions-$CODE_EXTENSIONS.sh
 # \
   && curl -fL https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/code-server_${CODE_VERSION}_amd64.deb -o code.deb \
   && echo ${PASSWORD} | sudo -S dpkg -i code.deb && rm code.deb \
+  && bash "$HOME/ferrum/code-server/extensions-${CODE_EXTENSIONS}.sh" \
+  && echo   "$HOME/ferrum/code-server/extensions-${CODE_EXTENSIONS}.sh" > txt \
 # \
 # install oh-my-zsh, unpinned lastest version at container build date \
 # set default theme $ZSH_THEME and plugins $OHMYZSH_PLUGINS \
