@@ -76,7 +76,6 @@ RUN \
   && curl -fL https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/code-server_${CODE_VERSION}_amd64.deb -o code.deb \
   && echo ${PASSWORD} | sudo -S dpkg -i code.deb && rm code.deb \
   && bash "$HOME/ferrum/code-server/extensions-${CODE_EXTENSIONS}.sh" \
-  && echo   "$HOME/ferrum/code-server/extensions-${CODE_EXTENSIONS}.sh" > txt \
 # \
 # install oh-my-zsh, unpinned lastest version at container build date \
 # set default theme $ZSH_THEME and plugins $OHMYZSH_PLUGINS \
