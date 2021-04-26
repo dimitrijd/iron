@@ -81,7 +81,7 @@ RUN \
 # set default theme $ZSH_THEME and plugins $OHMYZSH_PLUGINS \
 # \
   && wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
-  && sh ./install.sh && rm ./install.sh \
+  && sh ./install.sh --unattended && rm ./install.sh \
   && sed -i  "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
   && sed -i  "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
 # \

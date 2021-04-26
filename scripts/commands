@@ -3,6 +3,11 @@
 # ferrum post-build init
 # appended to .bashrc and .zshrc
 
+# stop update prompt and autoapdate by oh-my-zsh
+DISABLE_UPDATE_PROMPT=true
+DISABLE_AUTO_UPDATE=true
+
+
 # base directory for ferrum configurations and scripts
 export BASE_FERRUM="$HOME/ferrum"
 
