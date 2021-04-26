@@ -2,3 +2,4 @@ node_modules/
 help/node_modules/
 package-lock.json
 help/package-lock.json
+dump/
