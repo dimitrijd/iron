@@ -89,7 +89,7 @@ RUN \
 # end of RUN
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ${SHELL}
+CMD ["/usr/bin/zsh"]
 
 # mongo
 #EXPOSE 27017   #   - 27017: process
