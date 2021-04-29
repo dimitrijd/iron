@@ -3,12 +3,11 @@ FROM ubuntu:${UBUNTU_VERSION}
 
 ARG BASE_PACKAGES='dumb-init supervisor sudo ca-certificates apt-transport-https tzdata gnupg'
 ARG SHELL_PACKAGES='curl wget vim git zsh locales fonts-powerline neofetch'
-ARG MONGO_UBUNTU_VERSION=bionic
+ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG CODE_VERSION=3.9.3
 ARG CODE_EXTENSIONS=pinned
-# ARG CODE_EXTENSIONS=latest
 ARG ZSH_THEME="takashiyoshida"
 ARG OHMYZSH_PLUGINS="git node"
 ARG USR_NAME=coder
@@ -40,16 +39,13 @@ RUN \
   && usermod -aG sudo $USR_NAME \ 
   && echo $USR_NAME:$PASSWORD | chpasswd \
 # \
-# install mongodb-org packages, unpinned versions for $UBUNTU_VERSION 
-# create a mongod:mongod user, add $USR_NAME to mongod group  
+# install mongodb-org packages, pinned versions for $MONGO_UBUNTU_VERSION
+# create a mongodb group, mongodb:mongodb user, add $USR_NAME to mongod group  
 # \
-  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4 \
-  && echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | \ 
-       tee /etc/apt/sources.list.d/mongodb-org-4.0.list \
-  && apt-get update && apt-get install -y mongodb-org --no-install-recommends \
-  && apt-get clean && apt-get autoremove \
-  && rm -rf /var/cache/apt/lists \
-  && groupadd -f mongodb && usermod -aG mongodb $USR_NAME \
+  && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
+  && wget "https://fastdl.mongodb.org/linux/${target}.tgz" \
+  && tar fxzv "${target}.tgz" "${target}/bin" && cp -r "${target}/bin/." . && rm -rf "${target}" \
+  && groupadd -f mongodb && useradd -g mongodb mongodb && usermod -aG mongodb $USR_NAME \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
 # 
 # end of RUN
@@ -62,7 +58,7 @@ USER $USR_NAME
 RUN \ 
 # \
 # make diretories and touch files needed for the installations \
-# \
+  
   mkdir .nvm && mkdir .git && mkdir .logs && touch .gitconfig \
 # \
 # install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
