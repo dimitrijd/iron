@@ -43,8 +43,7 @@ RUN \
 # create a mongodb group, mongodb:mongodb user, add $USR_NAME to mongod group  
 # \
   && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
-  && wget "https://fastdl.mongodb.org/linux/${target}.tgz" \
-  && tar fxzv "${target}.tgz" "${target}/bin" && cp -r "${target}/bin/." . && rm -rf "${target}" \
+  && wget "https://fastdl.mongodb.org/linux/${target}.tgz" && tar fxv ${target}.tgz && sudo mv $target/bin/* /usr/bin/ && rm -rf $target* \
   && groupadd -f mongodb && useradd -g mongodb mongodb && usermod -aG mongodb $USR_NAME \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
 # 
