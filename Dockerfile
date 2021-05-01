@@ -1,23 +1,14 @@
 ARG UBUNTU_VERSION=18.04   
-FROM ubuntu:${UBUNTU_VERSION}
+FROM ubuntu:${UBUNTU_VERSION} AS devcon_ubuntu_base
 
 ARG BASE_PACKAGES='dumb-init supervisor sudo ca-certificates apt-transport-https tzdata gnupg'
 ARG SHELL_PACKAGES='curl wget vim git zsh locales fonts-powerline neofetch'
-ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
-ARG NODE_VERSION=14.16.1
-ARG NVM_VERSION=v0.38.0
-ARG CODE_VERSION=3.9.3
-ARG CODE_EXTENSIONS=pinned
-ARG ZSH_THEME="takashiyoshida"
-ARG OHMYZSH_PLUGINS="git node"
 ARG USR_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
 ARG GID=1000
-
 ENV SHELL /usr/bin/zsh
 ENV HOME /home/$USR_NAME
-ENV NVM_DIR "$HOME/.nvm"
 
 RUN \ 
 # \
@@ -35,12 +26,30 @@ RUN \
      --shell $SHELL --home $HOME \
      --gecos "User" $USR_NAME \
   && usermod -aG sudo $USR_NAME \ 
-  && echo $USR_NAME:$PASSWORD | chpasswd \
+  && echo $USR_NAME:$PASSWORD | chpasswd 
+
+# 
+# end of RUN
+
+ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
+ARG NODE_VERSION=14.16.1
+ARG NVM_VERSION=v0.38.0
+ARG CODE_VERSION=3.9.3
+ARG CODE_EXTENSIONS=pinned
+ARG ZSH_THEME="takashiyoshida"
+ARG OHMYZSH_PLUGINS="git node"
+ARG USR_NAME=coder
+ENV SHELL /usr/bin/zsh
+ENV HOME /home/$USR_NAME
+ENV NVM_DIR "$HOME/.nvm"
+
+FROM devcon_ubuntu_base AS devcon_ubuntu_mern
 # \
 # install mongodb-org packages, pinned versions for $MONGO_UBUNTU_VERSION
 # create a mongodb group, mongodb:mongodb user, add $USR_NAME to mongod group  
 # \
-  && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
+RUN \
+  target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
   && wget "https://fastdl.mongodb.org/linux/${target}.tgz" \
   && tar fxv ${target}.tgz && mv $target/bin/* /usr/bin/ && rm -rf $target* \
   && groupadd -f mongodb && useradd -g mongodb mongodb \ 
@@ -48,6 +57,7 @@ RUN \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
 # 
 # end of RUN
+
 
 WORKDIR $HOME
 COPY . ferrum
