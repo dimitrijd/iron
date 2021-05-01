@@ -19,17 +19,15 @@ ENV SHELL /usr/bin/zsh
 ENV HOME /home/$USR_NAME
 ENV NVM_DIR "$HOME/.nvm"
 
-ENV DEBIAN_FRONTEND noninteractive  
 RUN \ 
 # \
-# install base and shell packages BASE_PACKAGES SHELL_PACKAGES, unpinnned versions \
+# install BASE_PACKAGES and SHELL_PACKAGES, unpinnned versions \
 # \
-  apt-get update \
-  && apt-get install -y ${BASE_PACKAGES} ${SHELL_PACKAGES} \ 
-     --no-install-recommends \
-  && locale-gen en_US.UTF-8 \
-  && apt-get clean && apt-get autoremove \
-  && rm -rf /var/cache/apt/lists \
+  apt-get update \ 
+  && DEBIAN_FRONTEND=noninteractive \
+     apt-get install -y --no-install-recommends \
+     ${BASE_PACKAGES} ${SHELL_PACKAGES} \ 
+  && apt-get clean && apt-get autoremove && rm -rf /var/cache/apt/lists \
 # \
 # install user $USR_NAME $UID, $GID, make they sudoer with $PASSWORD \
 # \
@@ -43,8 +41,10 @@ RUN \
 # create a mongodb group, mongodb:mongodb user, add $USR_NAME to mongod group  
 # \
   && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
-  && wget "https://fastdl.mongodb.org/linux/${target}.tgz" && tar fxv ${target}.tgz && sudo mv $target/bin/* /usr/bin/ && rm -rf $target* \
-  && groupadd -f mongodb && useradd -g mongodb mongodb && usermod -aG mongodb $USR_NAME \
+  && wget "https://fastdl.mongodb.org/linux/${target}.tgz" \
+  && tar fxv ${target}.tgz && mv $target/bin/* /usr/bin/ && rm -rf $target* \
+  && groupadd -f mongodb && useradd -g mongodb mongodb \ 
+  && usermod -aG mongodb $USR_NAME \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
 # 
 # end of RUN
@@ -77,8 +77,8 @@ RUN \
 # \
   && wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
   && sh ./install.sh --unattended && rm ./install.sh \
-  && sed -i  "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
-  && sed -i  "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
+  && sed -i "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
+  && sed -i "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
 # \
 # add start up commands and aliases to .zshrc and .bashrc \ 
 # \
@@ -89,6 +89,15 @@ RUN \
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/usr/bin/zsh"]
 
-# mongo
-#EXPOSE 27017   #   - 27017: process
+# mongod
+EXPOSE 27017
+# reactjs client
+EXPOSE 3000
+# reactjs server
+EXPOSE 5000
+# code-server
+EXPOSE 8443
+
+
+
 
