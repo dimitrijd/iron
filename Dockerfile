@@ -57,7 +57,7 @@ RUN \
 # non-versioned essential packages
 #
 # ############################################################
-ARG PACKAGES=wget ca-certificates
+ARG PACKAGES=wget
 ARG NODE_VERSION=14.16.1
 ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
 ARG $USR_NAME=coder
