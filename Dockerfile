@@ -1,17 +1,21 @@
-# #
+# ############################################################
+#
 # devcon v.0.5
 # 
 # versioned dev container ubuntu + node + mongo + code-server
-#
-# #
+# three stages:
+# - base:  versioned ubuntu e non-root user
+# - stack: versioned node and mongodb packages
+# - dev:   versioned code-server, extension, oh-my-zsh
+# ############################################################
 
-
-# #  DEVCON - **** BASE ****
+# ##########################    
+# #  devcon - **** BASE ****
 #
 # versioned UBUNTU base + essential PACKAGES + non-root USR_NAME
 #
-# 
-ARG UBUNTU_VERSION=18.04   
+#
+ARG UBUNTU_VERSION=18.04
 FROM ubuntu:${UBUNTU_VERSION} AS devcon_ubuntu_base
 
 ARG PACKAGES='dumb-init supervisor sudo ca-certificates apt-transport-https tzdata gnupg'
@@ -19,36 +23,36 @@ ARG USR_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
 ARG GID=1000
-ARG SHELL /usr/bin/zsh
-ARG HOME /home/$USR_NAME
+ARG SHELL=/usr/bin/zsh
+ARG HOME=/home/$USR_NAME
 
-RUN \ 
+RUN \
 # \
 # install base $PACKAGES, unpinnned versions \
 # \
-  apt-get update \ 
+  apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
-     apt-get install -y --no-install-recommends ${PACKAGES} \ 
+     apt-get install -y --no-install-recommends ${PACKAGES} \
   && apt-get clean \
 # \
 # install user $USR_NAME $UID, $GID, make they sudoer with $PASSWORD \
 # \
-  && adduser --quiet --disabled-password \ 
+  && adduser --quiet --disabled-password \
      --shell $SHELL --home $HOME \
      --gecos "User" $USR_NAME \
-  && usermod -aG sudo $USR_NAME \ 
-  && echo $USR_NAME:$PASSWORD | chpasswd 
-
-# 
+  && usermod -aG sudo $USR_NAME \
+  && echo $USR_NAME:$PASSWORD | chpasswd
+#
 # end of RUN
 
 
-# #  DEVCON - **** STACK ****
+# ###########################
+# #  devcon - **** STACK ****
 #
-# versioned NODE_VERSION, MONGO_UBUNTU_VERSION, essential PACKAGES 
-# 
-# 
-ARG PACKAGES='curl wget vim git zsh locales fonts-powerline neofetch'
+# versioned NODE_VERSION, MONGO_UBUNTU_VERSION
+# non-versioned essential packages
+#
+ARG PACKAGES='wget'
 ARG NODE_VERSION=14.16.1
 ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
 ARG $USR_NAME=coder
@@ -56,7 +60,7 @@ ARG $USR_NAME=coder
 FROM devcon_ubuntu_base AS devcon_ubuntu_stack
 RUN \
 # \
-# install base $PACKAGES, unpinnned versions \
+# install stack $PACKAGES, unpinnned versions \
 # \
   apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
@@ -75,10 +79,15 @@ RUN \
 # 
 # end of RUN
 
-
-
+# #########################
+# #  devcon - **** DEV ****
+#
+# versioned nvm, code-server, code_extensions
+# non-versioned essential packages
+#
 FROM devcon_ubuntu_stack AS devcon_ubuntu_dev
 
+ARG PACKAGES='curl vim git zsh locales fonts-powerline neofetch'
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG CODE_VERSION=3.9.3
@@ -86,20 +95,32 @@ ARG CODE_EXTENSIONS=pinned
 ARG ZSH_THEME="takashiyoshida"
 ARG OHMYZSH_PLUGINS="git node"
 ARG USR_NAME=coder
-ENV SHELL /usr/bin/zsh
-ENV HOME /home/$USR_NAME
-ENV NVM_DIR "$HOME/.nvm"
+ARG SHELL=/usr/bin/zsh
+ARG HOME=/home/$USR_NAME
+ARG NVM_DIR="$HOME/.nvm"
+
+
+RUN \ 
+# \
+# install dev PACKAGES, unpinnned versions \
+# \
+  apt-get update \
+  && DEBIAN_FRONTEND=noninteractive \
+     apt-get install -y --no-install-recommends ${PACKAGES} \
+  && apt-get clean 
+# 
+# end of RUN
 
 WORKDIR $HOME
 COPY . ferrum
 RUN chown ${USR_NAME} ferrum   
 USER $USR_NAME
 
-RUN \ 
-# \
+RUN \  
+#
 # make diretories and touch files needed for the installations \
-  
   mkdir .nvm && mkdir .git && mkdir .logs && touch .gitconfig \
+#
 # \
 # install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
 # \
