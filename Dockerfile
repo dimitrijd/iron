@@ -4,17 +4,21 @@
 # 
 # versioned dev container ubuntu + node + mongo + code-server
 # three stages:
-# - base:  versioned ubuntu e non-root user
+# - base:  versioned ubuntu and non-root user
 # - stack: versioned node and mongodb packages
-# - dev:   versioned code-server, extension, oh-my-zsh
+# - dev:   versioned code-server, extensions, oh-my-zsh, plugs
+#
 # ############################################################
 
-# ##########################    
-# #  devcon - **** BASE ****
+# ############################################################
 #
-# versioned UBUNTU base + essential PACKAGES + non-root USR_NAME
+# devcon - **** BASE ****
 #
+# versioned UBUNTU base
+# non-versioned dumb-init supervisord PACKAGES 
+# non-root USR_NAME
 #
+# ############################################################
 ARG UBUNTU_VERSION=18.04
 FROM ubuntu:${UBUNTU_VERSION} AS devcon_ubuntu_base
 
@@ -45,14 +49,15 @@ RUN \
 #
 # end of RUN
 
-
-# ###########################
-# #  devcon - **** STACK ****
+# ############################################################
+#
+# devcon - **** STACK ****
 #
 # versioned NODE_VERSION, MONGO_UBUNTU_VERSION
 # non-versioned essential packages
 #
-ARG PACKAGES='wget'
+# ############################################################
+ARG PACKAGES=wget ca-certificates
 ARG NODE_VERSION=14.16.1
 ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
 ARG $USR_NAME=coder
