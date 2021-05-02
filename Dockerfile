@@ -1,24 +1,35 @@
+# #
+# devcon v.0.5
+# 
+# versioned dev container ubuntu + node + mongo + code-server
+#
+# #
+
+
+# #  DEVCON - **** BASE ****
+#
+# versioned UBUNTU base + essential PACKAGES + non-root USR_NAME
+#
+# 
 ARG UBUNTU_VERSION=18.04   
 FROM ubuntu:${UBUNTU_VERSION} AS devcon_ubuntu_base
 
-ARG BASE_PACKAGES='dumb-init supervisor sudo ca-certificates apt-transport-https tzdata gnupg'
-ARG SHELL_PACKAGES='curl wget vim git zsh locales fonts-powerline neofetch'
+ARG PACKAGES='dumb-init supervisor sudo ca-certificates apt-transport-https tzdata gnupg'
 ARG USR_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
 ARG GID=1000
-ENV SHELL /usr/bin/zsh
-ENV HOME /home/$USR_NAME
+ARG SHELL /usr/bin/zsh
+ARG HOME /home/$USR_NAME
 
 RUN \ 
 # \
-# install BASE_PACKAGES and SHELL_PACKAGES, unpinnned versions \
+# install base $PACKAGES, unpinnned versions \
 # \
   apt-get update \ 
   && DEBIAN_FRONTEND=noninteractive \
-     apt-get install -y --no-install-recommends \
-     ${BASE_PACKAGES} ${SHELL_PACKAGES} \ 
-  && apt-get clean && apt-get autoremove && rm -rf /var/cache/apt/lists \
+     apt-get install -y --no-install-recommends ${PACKAGES} \ 
+  && apt-get clean \
 # \
 # install user $USR_NAME $UID, $GID, make they sudoer with $PASSWORD \
 # \
@@ -31,7 +42,43 @@ RUN \
 # 
 # end of RUN
 
+
+# #  DEVCON - **** STACK ****
+#
+# versioned NODE_VERSION, MONGO_UBUNTU_VERSION, essential PACKAGES 
+# 
+# 
+ARG PACKAGES='curl wget vim git zsh locales fonts-powerline neofetch'
+ARG NODE_VERSION=14.16.1
 ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
+ARG $USR_NAME=coder
+
+FROM devcon_ubuntu_base AS devcon_ubuntu_stack
+RUN \
+# \
+# install base $PACKAGES, unpinnned versions \
+# \
+  apt-get update \
+  && DEBIAN_FRONTEND=noninteractive \
+     apt-get install -y --no-install-recommends ${PACKAGES} \
+  && apt-get clean \
+# \
+# install mongodb-org packages, pinned versions for $MONGO_UBUNTU_VERSION
+# create a mongodb group, mongodb:mongodb user, add $USR_NAME to mongod group  
+# \
+  && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
+  && wget "https://fastdl.mongodb.org/linux/${target}.tgz" \
+  && tar fxv ${target}.tgz && mv $target/bin/* /usr/bin/ && rm -rf $target* \
+  && groupadd -f mongodb && useradd -g mongodb mongodb \ 
+  && usermod -aG mongodb $USR_NAME \
+  && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
+# 
+# end of RUN
+
+
+
+FROM devcon_ubuntu_stack AS devcon_ubuntu_dev
+
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG CODE_VERSION=3.9.3
@@ -42,22 +89,6 @@ ARG USR_NAME=coder
 ENV SHELL /usr/bin/zsh
 ENV HOME /home/$USR_NAME
 ENV NVM_DIR "$HOME/.nvm"
-
-FROM devcon_ubuntu_base AS devcon_ubuntu_mern
-# \
-# install mongodb-org packages, pinned versions for $MONGO_UBUNTU_VERSION
-# create a mongodb group, mongodb:mongodb user, add $USR_NAME to mongod group  
-# \
-RUN \
-  target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
-  && wget "https://fastdl.mongodb.org/linux/${target}.tgz" \
-  && tar fxv ${target}.tgz && mv $target/bin/* /usr/bin/ && rm -rf $target* \
-  && groupadd -f mongodb && useradd -g mongodb mongodb \ 
-  && usermod -aG mongodb $USR_NAME \
-  && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
-# 
-# end of RUN
-
 
 WORKDIR $HOME
 COPY . ferrum
