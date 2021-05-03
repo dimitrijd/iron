@@ -37,7 +37,7 @@ RUN \
   apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -y --no-install-recommends ${PACKAGES} \
-  && apt-get clean \
+  && apt-get clean && rm -rf /var/cache/apt/lists \
 # \
 # install user $USR_NAME $UID, $GID, make they sudoer with $PASSWORD \
 # \
@@ -70,7 +70,7 @@ RUN \
   apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -y --no-install-recommends ${PACKAGES} \
-  && apt-get clean \
+  && apt-get clean && rm -rf /var/cache/apt/lists \
 # \
 # install mongodb-org packages, pinned versions for $MONGO_UBUNTU_VERSION
 # create a mongodb group, mongodb:mongodb user, add $USR_NAME to mongod group  
@@ -112,7 +112,7 @@ RUN \
   apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -y --no-install-recommends ${PACKAGES} \
-  && apt-get clean 
+  && apt-get clean && rm -rf /var/cache/apt/lists
 # 
 # end of RUN
 
