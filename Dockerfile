@@ -109,8 +109,6 @@ RUN \
 FROM devcon_ubuntu_stack AS devcon_ubuntu_dev
 # repeated ARGs
 ARG USER_NAME=coder
-ARG NODE_VERSION=14.16.1
-ARG SHELL=/usr/bin/zsh
 ARG HOME=/home/$USER_NAME
 # 
 ARG PACKAGES='vim git zsh locales fonts-powerline neofetch'
@@ -118,8 +116,9 @@ ARG CODE_VERSION=3.9.3
 ARG CODE_EXTENSIONS=pinned
 ARG ZSH_THEME=takashiyoshida
 ARG OHMYZSH_PLUGINS='git node'
-ARG NVM_DIR="$HOME/.nvm"
 
+WORKDIR $HOME
+COPY . ferrum
 RUN \ 
 # \
 # install dev PACKAGES, unpinnned versions \
@@ -127,24 +126,24 @@ RUN \
   apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -y --no-install-recommends ${PACKAGES} \
-  && apt-get clean && rm -rf /var/cache/apt/lists
+  && apt-get clean && rm -rf /var/cache/apt/lists \
+# \
+# install code-server, pinned version $CODE_VERSION
+# \
+  && curl -fL https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/code-server_${CODE_VERSION}_amd64.deb -o code.deb \
+  && dpkg -i code.deb && rm code.deb \
+# \
+  && chown -R ${USER_NAME} ferrum  
 # 
 # end of RUN
 
-WORKDIR $HOME
-COPY . ferrum
-RUN chown ${USER_NAME} ferrum   
 USER $USER_NAME
-
 RUN \  
 # \
 # make diretories and touch files needed for the installations \
   mkdir .logs && touch .gitconfig \
 # \
-# install code-server, pinned version $CODE_VERSION, pinned extensions ferrum/code-server/extensions-$CODE_EXTENSIONS.sh
-# \
-  && curl -fL https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/code-server_${CODE_VERSION}_amd64.deb -o code.deb \
-  && echo ${PASSWORD} | sudo -S dpkg -i code.deb && rm code.deb \
+# \ install local pinned extensions ferrum/code-server/extensions-$CODE_EXTENSIONS.sh
   && bash "$HOME/ferrum/code-server/extensions-${CODE_EXTENSIONS}.sh" \
 # \
 # install oh-my-zsh, unpinned lastest version at container build date \
