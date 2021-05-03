@@ -52,7 +52,7 @@ RUN \
 #
 # devcon - **** STACK ****
 #
-# versioned NODE_VERSION, MONGO_UBUNTU_VERSION
+# versioned NODE_VERSION, NVM_VERSION, MONGO_UBUNTU_VERSION
 # non-versioned essential packages
 #
 # ############################################################
@@ -60,11 +60,12 @@ FROM devcon_ubuntu_base AS devcon_ubuntu_stack
 # repeated ARGs
 ARG USER_NAME=coder
 # 
-ARG PACKAGES='wget xz-utils'
+ARG PACKAGES='wget curl'
 ARG NODE_VERSION=14.16.1
-ARG NODE_DISTRO=linux-x64
+ARG NVM_VERSION=v0.38.0
+ARG NVM_DIR="$HOME/.nvm"
 ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
-
+WORKDIR /home/$USER_NAME
 RUN \
 # \
 # install stack $PACKAGES, unpinnned versions \
@@ -74,14 +75,15 @@ RUN \
      apt-get install -y --no-install-recommends ${PACKAGES} \
   && apt-get clean && rm -rf /var/cache/apt/lists \
 # \
-# install nodejs, pinned version $NODE_VERSION
+# install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
 # \
-  && base="https://nodejs.org/download/release/v${NODE_VERSION}/" \
-  && target="node-v${NODE_VERSION}-${NODE_DISTRO}" \
-  && wget "${base}${target}.tar.xz" \
-  && mkdir -p /usr/local/lib/nodejs \
-  && tar fxv ${target}.tar.xz -C /usr/local/lib/nodejs \ 
-  && rm -rf ${target}.tar.xz \
+  && mkdir .nvm \
+  && curl -o- \ 
+     "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh"\
+     | bash \
+  && [ -s "${NVM_DIR}/nvm.sh" ] &&  \. "${NVM_DIR}/nvm.sh" \
+  && nvm install ${NODE_VERSION} \
+  && chown -R $USER_NAME .nvm \
 # \
 # install mongodb-org packages, pinned version $MONGO_UBUNTU_VERSION
 # create a mongodb group, mongodb:mongodb user, add $USER_NAME to mongod group  
@@ -111,8 +113,7 @@ ARG NODE_VERSION=14.16.1
 ARG SHELL=/usr/bin/zsh
 ARG HOME=/home/$USER_NAME
 # 
-ARG PACKAGES='curl vim git zsh locales fonts-powerline neofetch'
-ARG NVM_VERSION=v0.38.0
+ARG PACKAGES='vim git zsh locales fonts-powerline neofetch'
 ARG CODE_VERSION=3.9.3
 ARG CODE_EXTENSIONS=pinned
 ARG ZSH_THEME=takashiyoshida
@@ -138,15 +139,7 @@ USER $USER_NAME
 RUN \  
 # \
 # make diretories and touch files needed for the installations \
-  mkdir .nvm && mkdir .logs && mkdir .git && touch .gitconfig \
-# \
-# install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
-# \
-  && curl -o- \ 
-     "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh"\
-     | bash \
-  && [ -s "${NVM_DIR}/nvm.sh" ] &&  \. "${NVM_DIR}/nvm.sh" \
-  && nvm install ${NODE_VERSION} \
+  mkdir .logs && touch .gitconfig \
 # \
 # install code-server, pinned version $CODE_VERSION, pinned extensions ferrum/code-server/extensions-$CODE_EXTENSIONS.sh
 # \
