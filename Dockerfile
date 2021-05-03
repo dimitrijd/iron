@@ -3,10 +3,10 @@
 # devcon v.0.5
 # 
 # versioned dev container ubuntu + node + mongo + code-server
-# three stages:
-# - base:  versioned ubuntu and non-root user
-# - stack: versioned node and mongodb packages
-# - dev:   versioned code-server, extensions, oh-my-zsh, plugs
+# stages:
+# - base: ubuntu, dumb-init, supervisord, non-root user 
+# - stack: node, mongodb-org 
+# - dev: nvm, code-server w/ extensions, oh-my-zsh w/ plug-ins
 #
 # ############################################################
 
@@ -15,20 +15,20 @@
 # devcon - **** BASE ****
 #
 # versioned UBUNTU base
-# non-versioned dumb-init supervisord PACKAGES 
-# non-root USR_NAME
+# non-versioned dumb-init, supervisord, $PACKAGES 
+# non-root $USER_NAME, $UID, $GID, $SHELL
 #
 # ############################################################
 ARG UBUNTU_VERSION=18.04
 FROM ubuntu:${UBUNTU_VERSION} AS devcon_ubuntu_base
-
-ARG PACKAGES='dumb-init supervisor sudo ca-certificates apt-transport-https tzdata gnupg'
-ARG USR_NAME=coder
+ARG PACKAGES='dumb-init supervisor sudo ca-certificates \
+              apt-transport-https tzdata gnupg'
+ARG USER_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
 ARG GID=1000
 ARG SHELL=/usr/bin/zsh
-ARG HOME=/home/$USR_NAME
+ARG HOME=/home/$USER_NAME
 
 RUN \
 # \
@@ -39,13 +39,12 @@ RUN \
      apt-get install -y --no-install-recommends ${PACKAGES} \
   && apt-get clean && rm -rf /var/cache/apt/lists \
 # \
-# install user $USR_NAME $UID, $GID, make they sudoer with $PASSWORD \
+# install user $USER_NAME $UID, $GID, make they sudoer with $PASSWORD \
 # \
-  && adduser --quiet --disabled-password \
-     --shell $SHELL --home $HOME \
-     --gecos "User" $USR_NAME \
-  && usermod -aG sudo $USR_NAME \
-  && echo $USR_NAME:$PASSWORD | chpasswd
+  && groupadd -f -g ${GID} ${USER_NAME} \
+  && useradd -u ${UID} -g ${USER_NAME} -m -s ${SHELL} ${USER_NAME} \
+  && usermod -aG sudo ${USER_NAME} \
+  && echo ${USER_NAME}:${PASSWORD} | chpasswd
 #
 # end of RUN
 
@@ -57,12 +56,15 @@ RUN \
 # non-versioned essential packages
 #
 # ############################################################
-ARG PACKAGES=wget
-ARG NODE_VERSION=14.16.1
-ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
-ARG $USR_NAME=coder
-
 FROM devcon_ubuntu_base AS devcon_ubuntu_stack
+# repeated ARGs
+ARG USER_NAME=coder
+# 
+ARG PACKAGES='wget xz-utils'
+ARG NODE_VERSION=14.16.1
+ARG NODE_DISTRO=linux-x64
+ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
+
 RUN \
 # \
 # install stack $PACKAGES, unpinnned versions \
@@ -72,38 +74,50 @@ RUN \
      apt-get install -y --no-install-recommends ${PACKAGES} \
   && apt-get clean && rm -rf /var/cache/apt/lists \
 # \
-# install mongodb-org packages, pinned versions for $MONGO_UBUNTU_VERSION
-# create a mongodb group, mongodb:mongodb user, add $USR_NAME to mongod group  
+# install nodejs, pinned version $NODE_VERSION
+# \
+  && base="https://nodejs.org/download/release/v${NODE_VERSION}/" \
+  && target="node-v${NODE_VERSION}-${NODE_DISTRO}" \
+  && wget "${base}${target}.tar.xz" \
+  && mkdir -p /usr/local/lib/nodejs \
+  && tar fxv ${target}.tar.xz -C /usr/local/lib/nodejs \ 
+  && rm -rf ${target}.tar.xz \
+# \
+# install mongodb-org packages, pinned version $MONGO_UBUNTU_VERSION
+# create a mongodb group, mongodb:mongodb user, add $USER_NAME to mongod group  
 # \
   && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
   && wget "https://fastdl.mongodb.org/linux/${target}.tgz" \
-  && tar fxv ${target}.tgz && mv $target/bin/* /usr/bin/ && rm -rf $target* \
-  && groupadd -f mongodb && useradd -g mongodb mongodb \ 
-  && usermod -aG mongodb $USR_NAME \
+  && tar fxv "${target}.tgz" \ 
+  && mv ${target}/bin/* /usr/bin/ && rm -rf ${target}* \
+  && groupadd -f mongodb && useradd --system -g mongodb mongodb \ 
+  && usermod -aG mongodb $USER_NAME \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
 # 
 # end of RUN
 
-# #########################
-# #  devcon - **** DEV ****
+# ############################################################
+#
+# devcon - **** DEV ****
 #
 # versioned nvm, code-server, code_extensions
 # non-versioned essential packages
 #
+# ############################################################
 FROM devcon_ubuntu_stack AS devcon_ubuntu_dev
-
-ARG PACKAGES='curl vim git zsh locales fonts-powerline neofetch'
+# repeated ARGs
+ARG USER_NAME=coder
 ARG NODE_VERSION=14.16.1
+ARG SHELL=/usr/bin/zsh
+ARG HOME=/home/$USER_NAME
+# 
+ARG PACKAGES='curl vim git zsh locales fonts-powerline neofetch'
 ARG NVM_VERSION=v0.38.0
 ARG CODE_VERSION=3.9.3
 ARG CODE_EXTENSIONS=pinned
-ARG ZSH_THEME="takashiyoshida"
-ARG OHMYZSH_PLUGINS="git node"
-ARG USR_NAME=coder
-ARG SHELL=/usr/bin/zsh
-ARG HOME=/home/$USR_NAME
+ARG ZSH_THEME=takashiyoshida
+ARG OHMYZSH_PLUGINS='git node'
 ARG NVM_DIR="$HOME/.nvm"
-
 
 RUN \ 
 # \
@@ -118,17 +132,19 @@ RUN \
 
 WORKDIR $HOME
 COPY . ferrum
-RUN chown ${USR_NAME} ferrum   
-USER $USR_NAME
+RUN chown ${USER_NAME} ferrum   
+USER $USER_NAME
 
 RUN \  
 # \
 # make diretories and touch files needed for the installations \
-  mkdir .nvm && mkdir .git && mkdir .logs && touch .gitconfig \
+  mkdir .nvm && mkdir .logs && mkdir .git && touch .gitconfig \
 # \
 # install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
 # \
-  && curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash \
+  && curl -o- \ 
+     "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh"\
+     | bash \
   && [ -s "${NVM_DIR}/nvm.sh" ] &&  \. "${NVM_DIR}/nvm.sh" \
   && nvm install ${NODE_VERSION} \
 # \
