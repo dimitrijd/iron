@@ -122,10 +122,9 @@ RUN chown ${USR_NAME} ferrum
 USER $USR_NAME
 
 RUN \  
-#
+# \
 # make diretories and touch files needed for the installations \
   mkdir .nvm && mkdir .git && mkdir .logs && touch .gitconfig \
-#
 # \
 # install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
 # \
