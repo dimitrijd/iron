@@ -1,23 +1,17 @@
 # ############################################################
-#
 # devcon v.0.5
-# 
 # versioned dev container ubuntu + node + mongo + code-server
 # stages:
 # - base: ubuntu, dumb-init, supervisord, non-root user 
 # - stack: node, mongodb-org 
 # - dev: nvm, code-server w/ extensions, oh-my-zsh w/ plug-ins
-#
 # ############################################################
 
 # ############################################################
-#
 # devcon - **** BASE ****
-#
 # versioned UBUNTU base
 # non-versioned dumb-init, supervisord, $PACKAGES 
 # non-root $USER_NAME, $UID, $GID, $SHELL
-#
 # ############################################################
 ARG UBUNTU_VERSION=18.04
 FROM ubuntu:"${UBUNTU_VERSION}" AS base
@@ -50,11 +44,8 @@ RUN \
 # end of RUN
 
 # ############################################################
-#
 # devcon - **** STACK ****
-#
 # versioned NODE_VERSION, NVM_VERSION, MONGO_UBUNTU_VERSION
-# 
 # ############################################################
 FROM base AS stack
 # repeated ARGs
@@ -94,12 +85,9 @@ RUN \
 # end of RUN
 
 # ############################################################
-#
 # devcon - **** DEV ****
-#
 # versioned nvm, code-server, code_extensions
 # non-versioned essential packages
-#
 # ############################################################
 FROM stack AS dev
 # repeated ARGs
@@ -172,7 +160,3 @@ EXPOSE 3000
 EXPOSE 5000
 # code-server
 EXPOSE 8443
-
-
-
-
