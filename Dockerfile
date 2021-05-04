@@ -53,7 +53,7 @@ RUN \
 # devcon - **** STACK ****
 #
 # versioned NODE_VERSION, NVM_VERSION, MONGO_UBUNTU_VERSION
-#
+# 
 # ############################################################
 FROM devcon_ubuntu_base AS devcon_ubuntu_stack
 # repeated ARGs
@@ -66,7 +66,7 @@ ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
 WORKDIR /home/$USER_NAME
 RUN \
 # \
-# install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
+# install pinned versions $NVM_VERSION and $NODE_VERSION \
 # \
   mkdir .nvm \
   && curl --silent --fail --location --output - \ 
@@ -83,7 +83,8 @@ RUN \
   && curl --silent --fail --location --output "${target}.tgz" \
      "https://fastdl.mongodb.org/linux/${target}.tgz" \
   && tar fxv "${target}.tgz" \ 
-  && mv "${target}"/bin/* /usr/bin/ && rm -rf "${target}"* \
+  && mv "${target}"/bin/* /usr/bin/ \
+  && rm -rf "${target}"* \
   && groupadd -f mongodb && useradd --system -g mongodb mongodb \ 
   && usermod -aG mongodb $USER_NAME \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
@@ -107,7 +108,7 @@ ARG PACKAGES='vim git zsh locales fonts-powerline neofetch'
 ARG CODE_VERSION=3.9.3
 ARG CODE_EXTENSIONS=pinned
 ARG ZSH_THEME=takashiyoshida
-ARG OHMYZSH_PLUGINS='git node'
+ARG OHMYZSH_PLUGINS='git node npm'
 
 WORKDIR $HOME
 COPY . ferrum
@@ -122,9 +123,10 @@ RUN \
 # \
 # install code-server, pinned version $CODE_VERSION
 # \
+  && repo="https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/" \
   && target="code-server_${CODE_VERSION}_amd64.deb" \
   && curl --silent --fail --location --output "${target}" \
-     "https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/${target}" \
+     "${repo}${target}" \
   && dpkg -i "${target}" && rm "${target}" \
 # \
   && chown -R "${USER_NAME}" ferrum  
