@@ -37,7 +37,7 @@ RUN \
   apt-get -qq update \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -yq --no-install-recommends ${PACKAGES} \
-  && apt-get clean && rm -rf /var/cache/apt/lists \
+  && apt-get clean && rm -rf /var/cache/apt/lists /var/lib/apt/lists \
 # \
 # install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
 # \
@@ -120,7 +120,7 @@ RUN \
   apt-get -qq update \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -yq --no-install-recommends ${PACKAGES} \
-  && apt-get clean && rm -rf /var/cache/apt/lists \
+  && apt-get clean && rm -rf /var/cache/apt/lists /var/lib/apt/lists \
 # \
 # install code-server, pinned version $CODE_VERSION
 # \
