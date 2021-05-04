@@ -20,9 +20,9 @@
 #
 # ############################################################
 ARG UBUNTU_VERSION=18.04
-FROM ubuntu:"${UBUNTU_VERSION}" AS devcon_ubuntu_base
-ARG PACKAGES='dumb-init supervisor sudo ca-certificates \
-              apt-transport-https tzdata gnupg curl'
+FROM ubuntu:"${UBUNTU_VERSION}" AS base
+ARG PACKAGES='dumb-init supervisor sudo curl ca-certificates'
+# optionally: apt-transport-https tzdata gnupg
 ARG USER_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
@@ -34,9 +34,9 @@ RUN \
 # \
 # install base $PACKAGES, unpinnned versions \
 # \
-  apt-get update \
+  apt-get -qq update \
   && DEBIAN_FRONTEND=noninteractive \
-     apt-get install -y --no-install-recommends ${PACKAGES} \
+     apt-get install -yq --no-install-recommends ${PACKAGES} \
   && apt-get clean && rm -rf /var/cache/apt/lists \
 # \
 # install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
@@ -55,7 +55,7 @@ RUN \
 # versioned NODE_VERSION, NVM_VERSION, MONGO_UBUNTU_VERSION
 # 
 # ############################################################
-FROM devcon_ubuntu_base AS devcon_ubuntu_stack
+FROM base AS stack
 # repeated ARGs
 ARG USER_NAME=coder
 # 
@@ -82,8 +82,9 @@ RUN \
   && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
   && curl --silent --fail --location --output "${target}.tgz" \
      "https://fastdl.mongodb.org/linux/${target}.tgz" \
-  && tar fxv "${target}.tgz" \ 
-  && mv "${target}"/bin/* /usr/bin/ \
+  && tar fx "${target}.tgz" \ 
+  && mv "${target}"/bin/mongo /usr/bin/ \
+  && mv "${target}"/bin/mongod /usr/bin/ \
   && rm -rf "${target}"* \
   && groupadd -f mongodb && useradd --system -g mongodb mongodb \ 
   && usermod -aG mongodb $USER_NAME \
@@ -99,12 +100,12 @@ RUN \
 # non-versioned essential packages
 #
 # ############################################################
-FROM devcon_ubuntu_stack AS devcon_ubuntu_dev
+FROM stack AS dev
 # repeated ARGs
 ARG USER_NAME=coder
 ARG HOME=/home/$USER_NAME
 # 
-ARG PACKAGES='vim git zsh locales fonts-powerline neofetch'
+ARG PACKAGES='git zsh fonts-powerline neofetch'
 ARG CODE_VERSION=3.9.3
 ARG CODE_EXTENSIONS=pinned
 ARG ZSH_THEME=takashiyoshida
@@ -116,9 +117,9 @@ RUN \
 # \
 # install dev PACKAGES, unpinnned versions \
 # \
-  apt-get update \
+  apt-get -qq update \
   && DEBIAN_FRONTEND=noninteractive \
-     apt-get install -y --no-install-recommends ${PACKAGES} \
+     apt-get install -yq --no-install-recommends ${PACKAGES} \
   && apt-get clean && rm -rf /var/cache/apt/lists \
 # \
 # install code-server, pinned version $CODE_VERSION
