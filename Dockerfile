@@ -37,7 +37,8 @@ RUN \
   apt-get -qq update \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -yq --no-install-recommends ${PACKAGES} \
-  && apt-get clean && rm -rf /var/cache/apt/lists /var/lib/apt/lists \
+  && apt-get clean \ 
+  && rm -rf /var/cache/apt/lists /var/lib/apt/lists /var/cache/debconf* \
 # \
 # install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
 # \
@@ -74,7 +75,7 @@ RUN \
      | bash  \
   && [ -s "${NVM_DIR}/nvm.sh" ] &&  \. "${NVM_DIR}/nvm.sh" \
   && nvm install ${NODE_VERSION} \
-  && chown -R $USER_NAME .nvm \
+  && rm -rf .nvm/.cache/bin/* && chown -R $USER_NAME .nvm \
 # \
 # install mongodb-org packages, pinned version $MONGO_UBUNTU_VERSION
 # create a mongodb group, mongodb:mongodb user, add $USER_NAME to mongod group  
@@ -120,7 +121,8 @@ RUN \
   apt-get -qq update \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -yq --no-install-recommends ${PACKAGES} \
-  && apt-get clean && rm -rf /var/cache/apt/lists /var/lib/apt/lists \
+  && apt-get clean \
+  && rm -rf /var/cache/apt/lists /var/lib/apt/lists /var/cache/debconf* \
 # \
 # install code-server, pinned version $CODE_VERSION
 # \

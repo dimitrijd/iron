@@ -13,7 +13,6 @@ code-server --force --install-extension christian-kohler.npm-intellisense@1.3.1
 code-server --force --install-extension dsznajder.es7-react-js-snippets@2.7.1
 code-server --force --install-extension esbenp.prettier-vscode@6.3.2
 code-server --force --install-extension ritwickdey.liveserver@5.6.1
-code-server --force --install-extension ms-azuretools.vscode-docker@1.12.1
 
 # ##
 
