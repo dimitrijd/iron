@@ -20,15 +20,15 @@
 #
 # ############################################################
 ARG UBUNTU_VERSION=18.04
-FROM ubuntu:${UBUNTU_VERSION} AS devcon_ubuntu_base
+FROM ubuntu:"${UBUNTU_VERSION}" AS devcon_ubuntu_base
 ARG PACKAGES='dumb-init supervisor sudo ca-certificates \
-              apt-transport-https tzdata gnupg'
+              apt-transport-https tzdata gnupg curl'
 ARG USER_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
 ARG GID=1000
 ARG SHELL=/usr/bin/zsh
-ARG HOME=/home/$USER_NAME
+ARG HOME="/home/$USER_NAME"
 
 RUN \
 # \
@@ -39,12 +39,12 @@ RUN \
      apt-get install -y --no-install-recommends ${PACKAGES} \
   && apt-get clean && rm -rf /var/cache/apt/lists \
 # \
-# install user $USER_NAME $UID, $GID, make they sudoer with $PASSWORD \
+# install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
 # \
-  && groupadd -f -g ${GID} ${USER_NAME} \
-  && useradd -u ${UID} -g ${USER_NAME} -m -s ${SHELL} ${USER_NAME} \
-  && usermod -aG sudo ${USER_NAME} \
-  && echo ${USER_NAME}:${PASSWORD} | chpasswd
+  && groupadd -f -g "${GID}" "${USER_NAME}" \
+  && useradd -u "${UID}" -g "${USER_NAME}" -m -s "${SHELL}" "${USER_NAME}" \
+  && usermod -aG sudo "${USER_NAME}" \
+  && echo "${USER_NAME}":"${PASSWORD}" | chpasswd
 #
 # end of RUN
 
@@ -53,14 +53,12 @@ RUN \
 # devcon - **** STACK ****
 #
 # versioned NODE_VERSION, NVM_VERSION, MONGO_UBUNTU_VERSION
-# non-versioned essential packages
 #
 # ############################################################
 FROM devcon_ubuntu_base AS devcon_ubuntu_stack
 # repeated ARGs
 ARG USER_NAME=coder
 # 
-ARG PACKAGES='wget curl'
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG NVM_DIR="$HOME/.nvm"
@@ -68,19 +66,12 @@ ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
 WORKDIR /home/$USER_NAME
 RUN \
 # \
-# install stack $PACKAGES, unpinnned versions \
-# \
-  apt-get update \
-  && DEBIAN_FRONTEND=noninteractive \
-     apt-get install -y --no-install-recommends ${PACKAGES} \
-  && apt-get clean && rm -rf /var/cache/apt/lists \
-# \
 # install nvm, node pinned versions $NVM_VERSION and $NODE_VERSION \
 # \
-  && mkdir .nvm \
-  && curl -o- \ 
-     "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh"\
-     | bash \
+  mkdir .nvm \
+  && curl --silent --fail --location --output - \ 
+     "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" \
+     | bash  \
   && [ -s "${NVM_DIR}/nvm.sh" ] &&  \. "${NVM_DIR}/nvm.sh" \
   && nvm install ${NODE_VERSION} \
   && chown -R $USER_NAME .nvm \
@@ -89,9 +80,10 @@ RUN \
 # create a mongodb group, mongodb:mongodb user, add $USER_NAME to mongod group  
 # \
   && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
-  && wget "https://fastdl.mongodb.org/linux/${target}.tgz" \
+  && curl --silent --fail --location --output "${target}.tgz" \
+     "https://fastdl.mongodb.org/linux/${target}.tgz" \
   && tar fxv "${target}.tgz" \ 
-  && mv ${target}/bin/* /usr/bin/ && rm -rf ${target}* \
+  && mv "${target}"/bin/* /usr/bin/ && rm -rf "${target}"* \
   && groupadd -f mongodb && useradd --system -g mongodb mongodb \ 
   && usermod -aG mongodb $USER_NAME \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
@@ -130,10 +122,12 @@ RUN \
 # \
 # install code-server, pinned version $CODE_VERSION
 # \
-  && curl -fL https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/code-server_${CODE_VERSION}_amd64.deb -o code.deb \
-  && dpkg -i code.deb && rm code.deb \
+  && target="code-server_${CODE_VERSION}_amd64.deb" \
+  && curl --silent --fail --location --output "${target}" \
+     "https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/${target}" \
+  && dpkg -i "${target}" && rm "${target}" \
 # \
-  && chown -R ${USER_NAME} ferrum  
+  && chown -R "${USER_NAME}" ferrum  
 # 
 # end of RUN
 
@@ -143,20 +137,22 @@ RUN \
 # make diretories and touch files needed for the installations \
   mkdir .logs && touch .gitconfig \
 # \
-# \ install local pinned extensions ferrum/code-server/extensions-$CODE_EXTENSIONS.sh
+# \ install local pinned ferrum/code-server/extensions-$CODE_EXTENSIONS.sh
   && bash "$HOME/ferrum/code-server/extensions-${CODE_EXTENSIONS}.sh" \
 # \
 # install oh-my-zsh, unpinned lastest version at container build date \
 # set default theme $ZSH_THEME and plugins $OHMYZSH_PLUGINS \
 # \
-  && wget -O install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
+  && curl --silent --fail --location --output install.sh \
+     "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh" \
   && sh ./install.sh --unattended && rm ./install.sh \
   && sed -i "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
   && sed -i "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
 # \
 # add start up commands and aliases to .zshrc and .bashrc \ 
 # \
-  && cat ./ferrum/scripts/commands ./ferrum/scripts/aliases | tee -a .zshrc  >> .bashrc 
+  && cat ./ferrum/scripts/commands \
+     ./ferrum/scripts/aliases | tee -a .zshrc  >> .bashrc 
 # 
 # end of RUN
 
