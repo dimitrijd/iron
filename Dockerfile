@@ -42,7 +42,6 @@ RUN \
 # \
 # install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
 # \
-  # && groupadd -f -g "${GID}" "${USER_NAME}" \
   && useradd -u "${UID}" -U -G sudo -d ${HOME} -s "/bin/bash" "${USER_NAME}" \
   && echo "${USER_NAME}":"${PASSWORD}" | chpasswd \
 # \
@@ -51,7 +50,7 @@ RUN \
 # change ownership to $USER
 # \
   && mkdir ".logs" \
-  && echo "source ${HOME}/scripts/base.sh" | tee -a .zshrc  >> .bashrc \
+  # && echo "source ${HOME}/scripts/base.sh" | tee -a .zshrc  >> .bashrc \
   && chown -R ${USER_NAME}:${USER_NAME} ${HOME} 
 #
 # end of RUN

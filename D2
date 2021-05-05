@@ -1,0 +1,45 @@
+ARG UBUNTU_VERSION=18.04
+FROM ubuntu:"${UBUNTU_VERSION}" AS base
+ARG PACKAGES='dumb-init supervisor sudo curl ca-certificates'
+# apt-transport-https tzdata gnupg
+ARG USER_NAME=coder
+ARG PASSWORD=pass
+ARG UID=1000
+ARG GID=1000
+ARG HOME=/config
+
+# \
+# copy base.sh and supervisord/ into $HOME
+# 
+WORKDIR ${HOME}
+COPY ./scripts/base.sh ./scripts/base.sh
+COPY ./supervisord ./supervisord
+
+RUN \
+# \
+# install base $PACKAGES, unpinnned versions \
+# \
+  apt-get -qq update \
+  && DEBIAN_FRONTEND=noninteractive \
+     apt-get install -yq --no-install-recommends ${PACKAGES} \
+  && apt-get clean \ 
+  && rm -rf /var/cache/apt/lists /var/lib/apt/lists /var/cache/debconf* \
+# \
+# install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
+# \
+  && useradd -u "${UID}" -U -G sudo -d ${HOME} -s "/bin/bash" "${USER_NAME}" \
+  && echo "${USER_NAME}":"${PASSWORD}" | chpasswd \
+# \
+# create empty directory .logs for supervisord logs
+# add base.sh to .bashrc and .zshrc
+# change ownership to $USER
+# \
+  && mkdir ".logs" \
+  # && echo "source ${HOME}/scripts/base.sh" | tee -a .zshrc  >> .bashrc \
+  && chown -R ${USER_NAME}:${USER_NAME} ${HOME} 
+#
+# end of RUN
+
+USER ${USER_NAME}
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/bin/bash"]
