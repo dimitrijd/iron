@@ -23,11 +23,11 @@ RUN \
   && DEBIAN_FRONTEND=noninteractive \
      apt-get install -yq --no-install-recommends ${PACKAGES} \
   && apt-get clean \ 
-  && rm -rf /var/cache/apt/lists /var/lib/apt/lists /var/cache/debconf* \
+# && rm -rf /var/cache/apt/lists /var/lib/apt/lists /var/cache/debconf* \
 # \
 # install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
 # \
-  && useradd -u "${UID}" -U -G sudo -d ${HOME} -s "/bin/bash" "${USER_NAME}" \
+  && useradd -u "${UID}" -U -d ${HOME} -s "/bin/bash" "${USER_NAME}" \
   && echo "${USER_NAME}":"${PASSWORD}" | chpasswd \
 # \
 # create empty directory .logs for supervisord logs
@@ -40,6 +40,6 @@ RUN \
 #
 # end of RUN
 
-USER ${USER_NAME}
+# USER ${USER_NAME}
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/bin/bash"]
