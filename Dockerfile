@@ -11,18 +11,24 @@
 # devcon - **** BASE ****
 # versioned UBUNTU base
 # non-versioned dumb-init, supervisord, $PACKAGES 
-# non-root $USER_NAME, $UID, $GID, $SHELL
+# non-root $USER_NAME, $UID, $GID, sodoer
 # ############################################################
 ARG UBUNTU_VERSION=18.04
 FROM ubuntu:"${UBUNTU_VERSION}" AS base
-ARG PACKAGES='dumb-init supervisor sudo curl ca-certificates zsh'
+ARG PACKAGES='dumb-init supervisor sudo curl ca-certificates'
 # apt-transport-https tzdata gnupg
 ARG USER_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
 ARG GID=1000
-ARG SHELL=/usr/bin/zsh
 ARG HOME=/config
+
+# \
+# copy base.sh and supervisord/ into $HOME
+# 
+WORKDIR ${HOME}
+COPY ./scripts/base.sh ./scripts/base.sh
+COPY ./supervisord ./supervisord
 
 RUN \
 # \
@@ -37,26 +43,22 @@ RUN \
 # install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
 # \
   # && groupadd -f -g "${GID}" "${USER_NAME}" \
-  && useradd -u "${UID}" -U -d ${HOME} -s ${SHELL} "${USER_NAME}" \
-  && usermod -aG sudo "${USER_NAME}" \
-  && echo "${USER_NAME}":"${PASSWORD}" | chpasswd 
+  && useradd -u "${UID}" -U -G sudo -d ${HOME} -s "/bin/bash" "${USER_NAME}" \
+  && echo "${USER_NAME}":"${PASSWORD}" | chpasswd \
+# \
+# create empty directory .logs for supervisord logs
+# add base.sh to .bashrc and .zshrc
+# change ownership to $USER
+# \
+  && mkdir ".logs" \
+  && echo "source ${HOME}/scripts/base.sh" | tee -a .zshrc  >> .bashrc \
+  && chown -R ${USER_NAME}:${USER_NAME} ${HOME} 
 #
 # end of RUN
-# \
-# copy base.sh and supervisord/supervisord.conf into $HOME
-# create empty directory .logs for supervisord logs
-# change ownership to $USER
-# create supervisord/conf.d to store services .conf in next stack & dev layers
-# \
-WORKDIR ${HOME}
-COPY ./scripts/base.sh "${HOME}/scripts/base.sh"
-COPY ./supervisord/supervisord.conf "${HOME}/supervisord/supervisord.conf"
-RUN chown -R ${USER_NAME}:${USER_NAME} ${HOME}
-USER ${USER_NAME}
-RUN mkdir ".logs" && mkdir "supervisord/conf.d"
 
-ENTRYPOINT ["/usr/bin/dumb-init", "/usr/bin/supervisord", "-c /config/supervisord/supervisord.conf"]
-CMD ["/usr/bin/zsh"]
+USER ${USER_NAME}
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/bin/bash"]
 
 # ############################################################
 # devcon - **** STACK ****
@@ -70,7 +72,11 @@ ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG NVM_DIR="$HOME/.nvm"
 ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
+
 WORKDIR /home/$USER_NAME
+COPY ./scripts/stask.sh ./scripts/stack.sh
+USER root
+
 RUN \
 # \
 # install pinned versions $NVM_VERSION and $NODE_VERSION \
@@ -98,6 +104,10 @@ RUN \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
 # 
 # end of RUN
+
+USER ${USER_NAME}
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/bin/bash"]
 
 # ############################################################
 # devcon - **** DEV ****
