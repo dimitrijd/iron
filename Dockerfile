@@ -3,8 +3,8 @@
 # versioned dev container ubuntu + node + mongo + code-server
 # stages:
 # - base: ubuntu, dumb-init, supervisord, non-root user 
-# - stack: node, mongodb-org 
-# - dev: nvm, code-server w/ extensions, oh-my-zsh w/ plug-ins
+# - stack: node, nvm, mongodb-org 
+# - dev: code-server w/ extensions, oh-my-zsh w/ plug-ins
 # ############################################################
 
 # ############################################################
@@ -15,14 +15,14 @@
 # ############################################################
 ARG UBUNTU_VERSION=18.04
 FROM ubuntu:"${UBUNTU_VERSION}" AS base
-ARG PACKAGES='dumb-init supervisor sudo curl ca-certificates'
-# optionally: apt-transport-https tzdata gnupg
+ARG PACKAGES='dumb-init supervisor sudo curl ca-certificates zsh'
+# apt-transport-https tzdata gnupg
 ARG USER_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
 ARG GID=1000
 ARG SHELL=/usr/bin/zsh
-ARG HOME="/home/$USER_NAME"
+ARG HOME=/config
 
 RUN \
 # \
@@ -36,12 +36,27 @@ RUN \
 # \
 # install user $USER_NAME $UID, $GID, make them sudoer with $PASSWORD \
 # \
-  && groupadd -f -g "${GID}" "${USER_NAME}" \
-  && useradd -u "${UID}" -g "${USER_NAME}" -m -s "${SHELL}" "${USER_NAME}" \
+  # && groupadd -f -g "${GID}" "${USER_NAME}" \
+  && useradd -u "${UID}" -U -d ${HOME} -s ${SHELL} "${USER_NAME}" \
   && usermod -aG sudo "${USER_NAME}" \
-  && echo "${USER_NAME}":"${PASSWORD}" | chpasswd
+  && echo "${USER_NAME}":"${PASSWORD}" | chpasswd 
 #
 # end of RUN
+# \
+# copy base.sh and supervisord/supervisord.conf into $HOME
+# create empty directory .logs for supervisord logs
+# change ownership to $USER
+# create supervisord/conf.d to store services .conf in next stack & dev layers
+# \
+WORKDIR ${HOME}
+COPY ./scripts/base.sh "${HOME}/scripts/base.sh"
+COPY ./supervisord/supervisord.conf "${HOME}/supervisord/supervisord.conf"
+RUN chown -R ${USER_NAME}:${USER_NAME} ${HOME}
+USER ${USER_NAME}
+RUN mkdir ".logs" && mkdir "supervisord/conf.d"
+
+ENTRYPOINT ["/usr/bin/dumb-init", "/usr/bin/supervisord", "-c /config/supervisord/supervisord.conf"]
+CMD ["/usr/bin/zsh"]
 
 # ############################################################
 # devcon - **** STACK ****
