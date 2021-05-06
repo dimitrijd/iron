@@ -28,6 +28,7 @@ ARG HOME=/config
 # copy base.sh and supervisord/ into $HOME
 # 
 WORKDIR ${HOME}
+COPY ./Dockerfile ./Dockerfile
 COPY ./scripts/base.sh ./scripts/base.sh
 COPY ./supervisord ./supervisord
 
