@@ -105,7 +105,8 @@ RUN \
   && groupadd -f mongodb && useradd --system -g mongodb mongodb \ 
   && usermod -aG mongodb $USER_NAME \
   && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data \
-  && cp /config/mongo/mongod.supervisord.conf /config/supervisord/conf.d/mongod.conf \
+  && cp /config/mongo/mongod.supervisord.conf \ 
+     /config/supervisord/conf.d/mongod.conf \
 # \
 # add stack.sh to .bashrc and .zshrc
 # change ownership to $USER
@@ -122,12 +123,12 @@ CMD ["/bin/bash"]
 # ############################################################
 # devcon - **** DEV ****
 # versioned nvm, code-server, code_extensions
-# non-versioned essential packages
+# non-versioned git zsh oh-my-zsh fonts-powerline neofetch
 # ############################################################
 FROM stack AS dev
 # repeated ARGs
 ARG USER_NAME=coder
-ARG HOME=/home/$USER_NAME
+ARG HOME=/config
 # 
 ARG PACKAGES='git zsh fonts-powerline neofetch'
 ARG CODE_VERSION=3.9.3
@@ -135,8 +136,11 @@ ARG CODE_EXTENSIONS=pinned
 ARG ZSH_THEME=takashiyoshida
 ARG OHMYZSH_PLUGINS='git node npm'
 
+USER root
 WORKDIR $HOME
-COPY . ferrum
+COPY ./scripts/dev.sh ./scripts/dev.sh
+COPY ./code-server ./code-server
+
 RUN \ 
 # \
 # install dev PACKAGES, unpinnned versions \
@@ -148,25 +152,25 @@ RUN \
   && rm -rf /var/cache/apt/lists /var/lib/apt/lists /var/cache/debconf* \
 # \
 # install code-server, pinned version $CODE_VERSION
+# add a sym link in supervisord config directory
+# change ownership to $USER
 # \
   && repo="https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/" \
   && target="code-server_${CODE_VERSION}_amd64.deb" \
   && curl --silent --fail --location --output "${target}" \
      "${repo}${target}" \
   && dpkg -i "${target}" && rm "${target}" \
-# \
-  && chown -R "${USER_NAME}" ferrum  
-# 
+  && cp /config/code-server/code.supervisord.conf \
+     /config/supervisord/conf.d/code.conf \
+  && chown -R ${USER_NAME} ${HOME}
+#  
 # end of RUN
 
 USER $USER_NAME
-RUN \  
+RUN \   
 # \
-# make diretories and touch files needed for the installations \
-  mkdir .logs && touch .gitconfig \
-# \
-# \ install local pinned ferrum/code-server/extensions-$CODE_EXTENSIONS.sh
-  && bash "$HOME/ferrum/code-server/extensions-${CODE_EXTENSIONS}.sh" \
+# \ install local code-server extensions $CODE_EXTENSIONS
+  bash "$HOME/code-server/extensions-${CODE_EXTENSIONS}.sh" \
 # \
 # install oh-my-zsh, unpinned lastest version at container build date \
 # set default theme $ZSH_THEME and plugins $OHMYZSH_PLUGINS \
@@ -177,10 +181,9 @@ RUN \
   && sed -i "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
   && sed -i "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
 # \
-# add start up commands and aliases to .zshrc and .bashrc \ 
+# add dev.sh to .bashrc and .zshrc
 # \
-  && cat ./ferrum/scripts/commands \
-     ./ferrum/scripts/aliases | tee -a .zshrc  >> .bashrc 
+  && echo "source ${HOME}/scripts/dev.sh" | tee -a .zshrc  >> .bashrc 
 # 
 # end of RUN
 
