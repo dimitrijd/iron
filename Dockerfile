@@ -113,7 +113,7 @@ RUN \
 # change ownership to $USER
 # \
   && echo "source ${HOME}/scripts/stack.sh" | tee -a .zshrc  >> .bashrc \
-  && chown -R ${USER_NAME} ${HOME}
+  && chown -R ${USER_NAME} ${HOME}/scripts
 # 
 # end of RUN
 
@@ -154,7 +154,7 @@ RUN \
 # \
 # install code-server, pinned version $CODE_V
 # add a sym link in supervisord config directory
-# change ownership to $USER
+# clear cache, change ownership to $USER
 # \
   && repo="https://github.com/cdr/code-server/releases/download/v${CODE_V}/" \
   && target="code-server_${CODE_V}_amd64.deb" \
@@ -163,15 +163,19 @@ RUN \
   && dpkg -i "${target}" && rm "${target}" \
   && cp ${HOME}/code-server/code.supervisord.conf \
      ${HOME}/supervisord/conf.d/code.conf \
-  && chown -R ${USER_NAME} ${HOME}
+  && mkdir $HOME/.config && chown -R ${USER_NAME} ${HOME}/.config \
+  && mkdir $HOME/.local && chown -R ${USER_NAME} ${HOME}/.local
+
 #  
 # end of RUN
 
 USER $USER_NAME
 RUN \   
 # \
-# \ install local code-server extensions $CODE_EXTENSIONS
+# install local code-server extensions $CODE_EXTENSIONS clear cache
+# \ 
   bash "$HOME/code-server/extensions-${CODE_EXTENSIONS}.sh" \
+  && rm -rf /${HOME}/.local/share/code-server/CachedExtensionVSIXs \
 # \
 # install oh-my-zsh, unpinned lastest version at container build date \
 # set default theme $ZSH_THEME and plugins $OHMYZSH_PLUGINS \
@@ -200,3 +204,5 @@ EXPOSE 3000
 EXPOSE 5000
 # code-server
 EXPOSE 8443
+# live server code-server extension
+EXPOSE 5500
