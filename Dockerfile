@@ -92,7 +92,7 @@ RUN \
   && rm -rf .nvm/.cache/bin/* && chown -R ${USER_NAME} .nvm \
 # \
 # install mongodb-org packages, pinned version $MONGO_UBUNTU_VERSION
-# create a mongodb group, mongodb:mongodb user, add $USER_NAME to mongod group
+# create a mongodb group, mongodb:mongodb user, add $USER_NAME to group
 # add a sym link in supervisord config directory  
 # \
   && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
@@ -104,9 +104,9 @@ RUN \
   && rm -rf "${target}"* \
   && groupadd -f mongodb && useradd --system -g mongodb mongodb \ 
   && usermod -aG mongodb $USER_NAME \
-  && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data \
-  && cp /config/mongo/mongod.supervisord.conf \ 
-     /config/supervisord/conf.d/mongod.conf \
+  && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data\
+  && cp ${HOME}/mongo/mongod.supervisord.conf \ 
+     ${HOME}/supervisord/conf.d/mongod.conf \
 # \
 # add stack.sh to .bashrc and .zshrc
 # change ownership to $USER
@@ -131,7 +131,7 @@ ARG USER_NAME=coder
 ARG HOME=/config
 # 
 ARG PACKAGES='git zsh fonts-powerline neofetch'
-ARG CODE_VERSION=3.9.3
+ARG CODE_V=3.9.3
 ARG CODE_EXTENSIONS=pinned
 ARG ZSH_THEME=takashiyoshida
 ARG OHMYZSH_PLUGINS='git node npm'
@@ -151,17 +151,17 @@ RUN \
   && apt-get clean \
   && rm -rf /var/cache/apt/lists /var/lib/apt/lists /var/cache/debconf* \
 # \
-# install code-server, pinned version $CODE_VERSION
+# install code-server, pinned version $CODE_V
 # add a sym link in supervisord config directory
 # change ownership to $USER
 # \
-  && repo="https://github.com/cdr/code-server/releases/download/v${CODE_VERSION}/" \
-  && target="code-server_${CODE_VERSION}_amd64.deb" \
+  && repo="https://github.com/cdr/code-server/releases/download/v${CODE_V}/" \
+  && target="code-server_${CODE_V}_amd64.deb" \
   && curl --silent --fail --location --output "${target}" \
      "${repo}${target}" \
   && dpkg -i "${target}" && rm "${target}" \
-  && cp /config/code-server/code.supervisord.conf \
-     /config/supervisord/conf.d/code.conf \
+  && cp ${HOME}/code-server/code.supervisord.conf \
+     ${HOME}/supervisord/conf.d/code.conf \
   && chown -R ${USER_NAME} ${HOME}
 #  
 # end of RUN
@@ -176,13 +176,14 @@ RUN \
 # set default theme $ZSH_THEME and plugins $OHMYZSH_PLUGINS \
 # \
   && curl --silent --fail --location --output install.sh \
-     "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh" \
+  "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh" \
   && sh ./install.sh --unattended && rm ./install.sh \
   && sed -i "s/^ZSH_THEME=.*/ZSH_THEME=${ZSH_THEME}/" .zshrc \
   && sed -i "s/^plugins=.*/plugins=(${OHMYZSH_PLUGINS})/" .zshrc \
 # \
 # add dev.sh to .bashrc and .zshrc
 # \
+  && cat .zshrc.pre-oh-my-zsh >> .zshrc \
   && echo "source ${HOME}/scripts/dev.sh" | tee -a .zshrc  >> .bashrc 
 # 
 # end of RUN
