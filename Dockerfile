@@ -47,11 +47,11 @@ RUN \
   && useradd -u "${UID}" -U -G sudo -d ${HOME} -s "/bin/bash" "${USER_NAME}" \
   && echo "${USER_NAME}":"${PASSWORD}" | chpasswd \
 # \
-# create empty directory .logs for supervisord logs
+# create empty directory .logs for supervisord logs and conf.d
 # add base.sh to .bashrc and .zshrc
 # change ownership to $USER
 # \
-  && mkdir ".logs" \
+  && mkdir ".logs" && mkdir supervisord/conf.d \
   && echo "source ${HOME}/scripts/base.sh" | tee -a .zshrc  >> .bashrc \
   && chown -R ${USER_NAME}:${USER_NAME} ${HOME} 
 #
