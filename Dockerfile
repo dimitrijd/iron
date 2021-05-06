@@ -13,6 +13,7 @@
 # non-versioned dumb-init, supervisord, $PACKAGES 
 # non-root $USER_NAME, $UID, $GID, sodoer
 # ############################################################
+
 ARG UBUNTU_VERSION=18.04
 FROM ubuntu:"${UBUNTU_VERSION}" AS base
 ARG PACKAGES='dumb-init supervisor sudo curl ca-certificates'
@@ -50,7 +51,7 @@ RUN \
 # change ownership to $USER
 # \
   && mkdir ".logs" \
-  # && echo "source ${HOME}/scripts/base.sh" | tee -a .zshrc  >> .bashrc \
+  && echo "source ${HOME}/scripts/base.sh" | tee -a .zshrc  >> .bashrc \
   && chown -R ${USER_NAME}:${USER_NAME} ${HOME} 
 #
 # end of RUN
@@ -66,15 +67,15 @@ CMD ["/bin/bash"]
 FROM base AS stack
 # repeated ARGs
 ARG USER_NAME=coder
+ARG HOME=/config
 # 
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
 ARG NVM_DIR="$HOME/.nvm"
 ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
 
-WORKDIR /home/$USER_NAME
-COPY ./scripts/stask.sh ./scripts/stack.sh
-USER root
+WORKDIR ${HOME}
+COPY ./scripts/stack.sh ./scripts/stack.sh
 
 RUN \
 # \
