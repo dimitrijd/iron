@@ -1,6 +1,6 @@
 
 # ##
-# devcon post-build init
+# # devcon --target: base post-build init
 # appended to .bashrc and .zshrc
 
 # supervisord start-up

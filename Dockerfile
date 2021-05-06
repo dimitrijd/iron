@@ -74,8 +74,10 @@ ARG NVM_VERSION=v0.38.0
 ARG NVM_DIR="$HOME/.nvm"
 ARG MONGO_UBUNTU_VERSION=x86_64-ubuntu1804-4.0.2
 
+USER root
 WORKDIR ${HOME}
 COPY ./scripts/stack.sh ./scripts/stack.sh
+COPY ./mongo ./mongo
 
 RUN \
 # \
@@ -87,10 +89,11 @@ RUN \
      | bash  \
   && [ -s "${NVM_DIR}/nvm.sh" ] &&  \. "${NVM_DIR}/nvm.sh" \
   && nvm install ${NODE_VERSION} \
-  && rm -rf .nvm/.cache/bin/* && chown -R $USER_NAME .nvm \
+  && rm -rf .nvm/.cache/bin/* && chown -R ${USER_NAME} .nvm \
 # \
 # install mongodb-org packages, pinned version $MONGO_UBUNTU_VERSION
-# create a mongodb group, mongodb:mongodb user, add $USER_NAME to mongod group  
+# create a mongodb group, mongodb:mongodb user, add $USER_NAME to mongod group
+# add a sym link in supervisord config directory  
 # \
   && target=mongodb-linux-${MONGO_UBUNTU_VERSION} \
   && curl --silent --fail --location --output "${target}.tgz" \
@@ -101,7 +104,14 @@ RUN \
   && rm -rf "${target}"* \
   && groupadd -f mongodb && useradd --system -g mongodb mongodb \ 
   && usermod -aG mongodb $USER_NAME \
-  && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data 
+  && mkdir -p /data/db && chown -R mongodb:mongodb /data && chmod -R g+w /data \
+  && cp /config/mongo/mongod.supervisord.conf /config/supervisord/conf.d/mongod.conf \
+# \
+# add stack.sh to .bashrc and .zshrc
+# change ownership to $USER
+# \
+  && echo "source ${HOME}/scripts/stack.sh" | tee -a .zshrc  >> .bashrc \
+  && chown -R ${USER_NAME} ${HOME}
 # 
 # end of RUN
 
