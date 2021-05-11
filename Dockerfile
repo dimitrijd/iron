@@ -198,6 +198,8 @@ CMD ["/usr/bin/zsh"]
 
 # mongod
 EXPOSE 27017
+# mongod
+EXPOSE 27018
 # reactjs client
 EXPOSE 3000
 # reactjs server
