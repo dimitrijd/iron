@@ -24,6 +24,7 @@ ARG UID=1000
 ARG GID=1000
 ARG HOME=/config
 
+
 # \
 # copy base.sh and supervisord/ into $HOME
 # 
@@ -100,8 +101,7 @@ RUN \
   && curl --silent --fail --location --output "${target}.tgz" \
      "https://fastdl.mongodb.org/linux/${target}.tgz" \
   && tar fx "${target}.tgz" \ 
-  && mv "${target}"/bin/mongo /usr/bin/ \
-  && mv "${target}"/bin/mongod /usr/bin/ \
+  && mv "${target}"/bin/* /usr/bin/ \
   && rm -rf "${target}"* \
   && groupadd -f mongodb && useradd --system -g mongodb mongodb \ 
   && usermod -aG mongodb $USER_NAME \
