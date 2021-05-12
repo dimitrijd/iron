@@ -25,7 +25,7 @@ command -v docker &>/dev/null || (
 )
 
 docker images --format '{{.Repository}}' | grep ${img} &>/dev/null || (
-    echo -e "${BOLD}${RED}${img} image missing. ${YELLOW}${img} downloading...${LIGHT_YELLOW}" 
+    echo -e "${BOLD}${RED}${img} image missing ->> ${YELLOW}${img} downloading...${NORMAL}${LIGHT_YELLOW}" 
     docker pull ${img} && echo -e "${BOLD}${GREEN}${img} ...completed${NORMAL}"
 )
 

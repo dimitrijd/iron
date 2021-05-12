@@ -36,3 +36,12 @@
 - https://12factor.net/ - compliant
 - https://semver.org/ - compliant
 - monthly refreshing base
+
+created
+restarting
+running
+removing
+paused
+exited
+dead
+docker container ls -f 'status=exited'
