@@ -22,7 +22,7 @@ ARG USER_NAME=coder
 ARG PASSWORD=pass
 ARG UID=1000
 ARG GID=1000
-ARG HOME=/config
+ARG HOME=/${USER_NAME}
 
 
 # \
@@ -69,7 +69,7 @@ CMD ["/bin/bash"]
 FROM base AS stack
 # repeated ARGs
 ARG USER_NAME=coder
-ARG HOME=/config
+ARG HOME=/${USER_NAME}
 # 
 ARG NODE_VERSION=14.16.1
 ARG NVM_VERSION=v0.38.0
@@ -129,7 +129,7 @@ CMD ["/bin/bash"]
 FROM stack AS dev
 # repeated ARGs
 ARG USER_NAME=coder
-ARG HOME=/config
+ARG HOME=/${USER_NAME}
 # 
 ARG PACKAGES='git zsh fonts-powerline neofetch'
 ARG CODE_V=3.9.3
@@ -194,6 +194,7 @@ RUN \
 # end of RUN
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+WORKDIR $HOME/project
 CMD ["/usr/bin/zsh"]
 
 # mongod
