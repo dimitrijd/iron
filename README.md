@@ -11,7 +11,7 @@ docker pull dimitrijd/iron
 ## How to run
 ```
 docker run -it \
-  -p 271017:27017 \
+  -p 27017:27017 \
   -p 3000:3000 \
   -p 5000:5000 \
   -p 5500:5500 \
