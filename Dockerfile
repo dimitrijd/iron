@@ -1,6 +1,10 @@
 # ############################################################
-# devcon v.0.5
+# ferrum v.0.6
 # versioned dev container ubuntu + node + mongo + code-server
+#
+# github: irontools/ferrum
+# dockerhub: dimitrijd/iron
+# 
 # stages:
 # - base: ubuntu, dumb-init, supervisord, non-root user 
 # - stack: node, nvm, mongodb-org 
