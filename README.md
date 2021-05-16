@@ -3,23 +3,24 @@
 ### Compact and versioned dev container with dumb-init, supervisor, node, mongo, nvm, zsh, code-server.
 
 
-## How to get
-```
-docker pull dimitrijd/iron
-```
-
 ## How to run
 ```
 docker run -it \
-  -p 27017:27017 \
   -p 3000:3000 \
   -p 5000:5000 \
   -p 5500:5500 \
+  -p 27017:27017 \
   -p 8443:8443 \
-  -v $(pwd):/home/coder/project \
-  -t ferrum \
+  -v "$(pwd)":"/home/coder/project" \
+  --name ferrum \
   dimitrijd/iron
 ```
+
+## How to restart after exit
+```
+docker start ferrum && docker attach ferrum
+```
+
 
 ## To do
 - add welcome intro 
