@@ -11,7 +11,7 @@ docker run -it \
   -p 5500:5500 \
   -p 27017:27017 \
   -p 8443:8443 \
-  -v "$(pwd)":"/home/coder/project" \
+  -v "$(pwd)":"/coder/project" \
   --name ferrum \
   dimitrijd/iron
 ```
