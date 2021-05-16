@@ -7,17 +7,9 @@
 ```docker pull dimitrijd/iron```
 
 ## How to run
+```docker run -it  -p 271017:27017 -p 3000:3000 -p 5000:5000 -p 5500:5500 -p 8443:8443 -t ferrum dimitrijd/iron```
 
-``` docker run -it \
-    -p 271017:27017 \
-    -p 3000:3000 \
-    -p 5000:5000 \
-    -p 5500:5500 \
-    -p 8443:8443 \
-    -t ferrum \
-    dimitrijd/iron ```
-
-## To do:
+## To do
 - add welcome intro 
 - add global packages from npm (debug etc)
 
