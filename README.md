@@ -7,7 +7,7 @@
 ```docker pull dimitrijd/iron```
 
 ## How to run
-````docker run -it \
+```docker run -it \
    -p 271017:27017 \
    -p 3000:3000 \
    -p 5000:5000 \
