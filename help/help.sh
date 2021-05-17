@@ -1,14 +1,6 @@
 # help screeen
 #
 
-info() {
-# main paramenters
-img=dimitrijd/iron
-ver=latest
-container=iron
-host_dir=$(pwd)
-container_dir=project
-
 # color definitions
 RED='\e[31m'
 GREEN='\e[32m'
@@ -17,6 +9,8 @@ LIGHT_YELLOW='\e[93m'
 BLUE='\e[34m'
 BOLD='\e[1m'
 NORMAL='\e[0m'
+
+info() {
 echo -e "${BOLD}${RED}OS: ${BLUE}Ubuntu 18.04.5 LTS${NORMAL}"
 echo -e "${BOLD}${RED}dumb-init: ${BLUE}v1.2.1${NORMAL}"
 echo -e "${BOLD}${RED}supervisord: ${BLUE}$(supervisord -v)${NORMAL}"
@@ -29,6 +23,7 @@ echo -e "${BOLD}${GREEN}zsh: ${BLUE}$(zsh --version)${NORMAL}"
 echo -e "${BOLD}${GREEN}code-server: ${BLUE}$(code-server --version)${NORMAL}"
 echo -e "${BOLD}user: ${BLUE}$(id -un)${NORMAL}"
 echo -e "${BOLD}groups: ${BLUE}$(id -Gn)${NORMAL}"
+echo -e "\n${BOLD} >>> type 'help' to get started \n${NORMAL}"
 }
 
 help() {

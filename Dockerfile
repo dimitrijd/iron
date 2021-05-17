@@ -35,6 +35,7 @@ ARG HOME=/${USER_NAME}
 WORKDIR ${HOME}
 COPY ./Dockerfile ./Dockerfile
 COPY ./scripts/base.sh ./scripts/base.sh
+COPY ./help ./help
 COPY ./supervisord ./supervisord
 
 RUN \

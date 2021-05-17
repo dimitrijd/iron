@@ -17,9 +17,7 @@ DISABLE_AUTO_UPDATE=true
 source ../help/help.sh
 
 # welcome message
-neofetch
 info
-echo "\n\n>>> type 'help' to get started"
 
 
 # ##
