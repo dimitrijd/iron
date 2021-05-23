@@ -26,25 +26,25 @@ docker start ferrum && docker attach ferrum
 - add welcome intro 
 - add global packages from npm (debug etc)
 
-### HOME
+#### HOME
 - XDG compliant
 - $HOME/.ferrum can create the container 
 - divide build context into base / stack / dev (inside each build / run)
 
-### Versioning
+#### Versioning
 - add versionning to apt-packages via `requirements.txt`
 
-### Build options
+#### Build options
 - options base: ubuntu | debian | alpine
 - options overlay: dumb-init+supervisord | s6 overlay
 - options stack: node+mongo | node+Postgres | node+Mysql | node+sqlite3
 - options dev: code-server | vim
 
-### Host-side helpers
+#### Host-side helpers
 - managing container status via helper function (pull, run, start, stop, restart)
 - sharing .ssh github  mail / name
 - managigng mongodb export / import
 - code-space compatible
 
-### Permissions
+#### Permissions
 - UID/GUI from linuxserver.io
