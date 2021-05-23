@@ -26,7 +26,7 @@ docker start ferrum && docker attach ferrum
 - add welcome intro 
 - add global packages from npm (debug etc)
 
-#### HOME
+#### Home
 - XDG compliant
 - $HOME/.ferrum can create the container 
 - divide build context into base / stack / dev (inside each build / run)
