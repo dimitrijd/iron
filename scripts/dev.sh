@@ -14,9 +14,11 @@ DISABLE_UPDATE_PROMPT=true
 DISABLE_AUTO_UPDATE=true
 
 #
+source ../help/banner.sh
 source ../help/help.sh
 
 # welcome message
+banner
 info
 
 
