@@ -28,6 +28,7 @@ echo -e "\n${BOLD} >>> type 'help' to get started \n${NORMAL}"
 }
 
 help() {
+echo "\n"
 echo -e "${BOLD}${RED}service list and status: ${BLUE}status${NORMAL}"
 echo -e "${BOLD}${RED}start code-server: ${BLUE}code${NORMAL}"
 echo -e "${BOLD}${RED}start mongod: ${BLUE}mongod${NORMAL}"
@@ -41,4 +42,5 @@ echo -e "${BOLD}${GREEN}reactjs client: ${BLUE}3000${NORMAL}"
 echo -e "${BOLD}${GREEN}reactjs server: ${BLUE}5000${NORMAL}"
 echo -e "${BOLD}${GREEN}code-server: ${BLUE}8443${NORMAL}"
 echo -e "${BOLD}${GREEN}live server code extension: ${BLUE}5500${NORMAL}"
+echo "\n"
 }
