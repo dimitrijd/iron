@@ -37,7 +37,7 @@ echo -e "${BOLD}${RED}start or stop all services: ${BLUE}start | stop all${NORMA
 echo -e "${BOLD}${BLUE}service status:${NORMAL}"
 status
 echo -e "${BOLD}${GREEN}accessible on ${YELLOW}http://localhost:${BLUE}\$PORT${NORMAL}"
-echo -e "${BOLD}${GREEN}mongod: ${BLUE}27017${NORMAL}"
+echo -e "${BOLD}${GREEN}mongod: ${BLUE}27017 in container, 27019 in host${NORMAL}"
 echo -e "${BOLD}${GREEN}reactjs client: ${BLUE}3000${NORMAL}"
 echo -e "${BOLD}${GREEN}reactjs server: ${BLUE}5000${NORMAL}"
 echo -e "${BOLD}${GREEN}code-server: ${BLUE}8443${NORMAL}"
