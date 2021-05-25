@@ -9,7 +9,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # start mongod supervisord service
-alias mongod='start mongod'
+alias mongod='echo "on 27017 in container, on 27019 in host\n" && start mongod'
 
 # ##
 
